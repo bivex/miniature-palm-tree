@@ -40,9 +40,3 @@ public final class DirectoryAnalysisResultPresenter {
         outputFormatter.outputDetailedFileAnalysis(for: result, filePresenter: filePresenter)
     }
 }
-
-private extension String {
-    static func *(lhs: String, rhs: Int) -> String {
-        String(repeating: lhs, count: rhs)
-    }
-}

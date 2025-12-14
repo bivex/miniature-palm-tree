@@ -1,30 +1,12 @@
 //
-//  OutputFormatter.swift
+//  ConsoleOutputFormatter.swift
 //  ASTAnalyzer
 //
 //  Created on 2025-01-14.
-//  Protocol for output formatting to separate presentation logic from side effects
+//  Console implementation of OutputFormatter that handles actual printing
 //
 
 import Foundation
-
-/// Protocol for formatting and outputting analysis results
-public protocol OutputFormatter {
-    /// Outputs a formatted header for the analysis result
-    func outputHeader(for result: AnalysisResult)
-
-    /// Outputs a formatted summary of the analysis result
-    func outputSummary(for result: AnalysisResult)
-
-    /// Outputs formatted defect information
-    func outputDefects(for result: AnalysisResult)
-
-    /// Outputs a success message when no issues are found
-    func outputSuccessMessage()
-
-    /// Outputs a formatted footer for the analysis result
-    func outputFooter(for result: AnalysisResult)
-}
 
 /// Console implementation of OutputFormatter that handles actual printing
 public final class ConsoleOutputFormatter: OutputFormatter {
@@ -132,11 +114,5 @@ public final class ConsoleOutputFormatter: OutputFormatter {
         formatter.dateStyle = .medium
         formatter.timeStyle = .medium
         return formatter.string(from: date)
-    }
-}
-
-private extension String {
-    static func *(lhs: String, rhs: Int) -> String {
-        String(repeating: lhs, count: rhs)
     }
 }
