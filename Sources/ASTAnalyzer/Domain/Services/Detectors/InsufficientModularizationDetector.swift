@@ -11,15 +11,14 @@ import SwiftSyntax
 /// Detects files that are too large or contain too many declarations (Insufficient Modularization)
 /// Based on DIM (Insufficient Modularization):
 /// - File contains > 1 class/struct/enum/actor/protocol
-/// - LOC > 40
-/// - Max nesting depth > 3
+/// - LOC > threshold
+/// - Max nesting depth > threshold
 public final class InsufficientModularizationDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let maxLineCount = 40
-    private let maxNestingDepth = 3
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.insufficientModularization])
     }
 
@@ -41,11 +40,11 @@ public final class InsufficientModularizationDetector: BaseDefectDetector {
 
         // DIM condition 2: LOC > 40
         let lineCount = lineCount(of: sourceFile)
-        if lineCount > maxLineCount {
+        if lineCount > thresholds.moduleSmells.insufficientModularizationMaxLineCount {
             let defect = ArchitecturalDefect(
                 type: .insufficientModularization,
                 severity: .high,
-                message: "File contains \(lineCount) lines - exceeds maximum of \(maxLineCount)",
+                message: "File contains \(lineCount) lines - exceeds maximum of \(thresholds.moduleSmells.insufficientModularizationMaxLineCount)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Split into multiple files with related functionality"
             )
@@ -54,11 +53,11 @@ public final class InsufficientModularizationDetector: BaseDefectDetector {
 
         // DIM condition 3: Max nesting depth > 3
         let maxDepth = calculateMaxNestingDepth(in: sourceFile)
-        if maxDepth > maxNestingDepth {
+        if maxDepth > thresholds.moduleSmells.insufficientModularizationMaxNestingDepth {
             let defect = ArchitecturalDefect(
                 type: .insufficientModularization,
                 severity: .medium,
-                message: "Maximum nesting depth is \(maxDepth) - exceeds maximum of \(maxNestingDepth)",
+                message: "Maximum nesting depth is \(maxDepth) - exceeds maximum of \(thresholds.moduleSmells.insufficientModularizationMaxNestingDepth)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Reduce nesting depth by extracting nested code into separate functions or types"
             )

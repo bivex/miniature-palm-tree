@@ -11,13 +11,13 @@ import SwiftSyntax
 
 /// Detects duplicate code blocks (Duplicate Block)
 /// Based on DDB (Duplicate Block):
-/// - Code clone > 150 tokens found
+/// - Code clone > threshold tokens found
 public final class DuplicateBlockDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let minCloneTokenThreshold = 150
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.duplicateBlock])
     }
 
@@ -113,7 +113,7 @@ public final class DuplicateBlockDetector: BaseDefectDetector {
         for block in blocks {
             let normalizedContent = block.normalizedContent()
 
-            if seenBlocks.contains(normalizedContent) && block.isSignificant(minTokenThreshold: minCloneTokenThreshold) {
+            if seenBlocks.contains(normalizedContent) && block.isSignificant(minTokenThreshold: thresholds.moduleSmells.duplicateBlockTokens) {
                 // Found duplicate
                 duplicates.append(createDuplicateInfo(from: block))
             } else {

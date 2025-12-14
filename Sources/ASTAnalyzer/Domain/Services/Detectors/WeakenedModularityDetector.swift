@@ -11,13 +11,13 @@ import SwiftSyntax
 
 /// Detects weakened modularity (Weakened Modularity)
 /// Based on DWM (Weakened Modularity):
-/// - ModularityRatio = Cohesion/Coupling < 1
+/// - ModularityRatio = Cohesion/Coupling < threshold
 public final class WeakenedModularityDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let modularityRatioThreshold = 1.0
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.weakenedModularity])
     }
 
@@ -45,11 +45,11 @@ public final class WeakenedModularityDetector: BaseDefectDetector {
         if coupling > 0 { // Avoid division by zero
             let modularityRatio = cohesion / coupling
 
-            if modularityRatio < modularityRatioThreshold {
+            if modularityRatio < thresholds.structuralSmells.weakenedModularityRatio {
                 let defect = ArchitecturalDefect(
                     type: .weakenedModularity,
                     severity: .medium,
-                    message: "File has weakened modularity (cohesion/coupling ratio: \(String(format: "%.2f", modularityRatio))) - below threshold of \(modularityRatioThreshold)",
+                    message: "File has weakened modularity (cohesion/coupling ratio: \(String(format: "%.2f", modularityRatio))) - below threshold of \(thresholds.structuralSmells.weakenedModularityRatio)",
                     location: createLocation(filePath: filePath),
                     suggestion: "Improve cohesion by grouping related functionality or reduce coupling by introducing abstractions"
                 )

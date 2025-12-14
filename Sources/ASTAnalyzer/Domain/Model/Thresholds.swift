@@ -130,19 +130,71 @@ public struct StructuralSmellThresholds: Sendable, Codable {
     public let brokenHierarchyDIT: Int
     public let cyclicDependencyLength: Int
     public let featureEnvyThreshold: Int
+    public let denseStructureDegree: Double
+    public let weakenedModularityRatio: Double
 
     private enum CodingKeys: String, CodingKey {
         case messageChainLength = "message_chain_length"
         case brokenHierarchyDIT = "broken_hierarchy_dit"
         case cyclicDependencyLength = "cyclic_dependency_length"
         case featureEnvyThreshold = "feature_envy_threshold"
+        case denseStructureDegree = "dense_structure_degree"
+        case weakenedModularityRatio = "weakened_modularity_ratio"
     }
 
-    public init(messageChainLength: Int = 3, brokenHierarchyDIT: Int = 3, cyclicDependencyLength: Int = 2, featureEnvyThreshold: Int = 3) {
+    public init(
+        messageChainLength: Int = 3,
+        brokenHierarchyDIT: Int = 3,
+        cyclicDependencyLength: Int = 2,
+        featureEnvyThreshold: Int = 3,
+        denseStructureDegree: Double = 0.5,
+        weakenedModularityRatio: Double = 1.0
+    ) {
         self.messageChainLength = messageChainLength
         self.brokenHierarchyDIT = brokenHierarchyDIT
         self.cyclicDependencyLength = cyclicDependencyLength
         self.featureEnvyThreshold = featureEnvyThreshold
+        self.denseStructureDegree = denseStructureDegree
+        self.weakenedModularityRatio = weakenedModularityRatio
+    }
+}
+
+/// Thresholds for module-level code smells
+public struct ModuleSmellThresholds: Sendable, Codable {
+    public let duplicateBlockTokens: Int
+    public let imperativeAbstractionMaxExecCount: Int
+    public let imperativeAbstractionExecRatio: Double
+    public let insufficientModularizationMaxLineCount: Int
+    public let insufficientModularizationMaxNestingDepth: Int
+    public let missingAbstractionMaxElements: Int
+    public let unstructuredModuleMaxElements: Int
+
+    private enum CodingKeys: String, CodingKey {
+        case duplicateBlockTokens = "duplicate_block_tokens"
+        case imperativeAbstractionMaxExecCount = "imperative_abstraction_max_exec_count"
+        case imperativeAbstractionExecRatio = "imperative_abstraction_exec_ratio"
+        case insufficientModularizationMaxLineCount = "insufficient_modularization_max_line_count"
+        case insufficientModularizationMaxNestingDepth = "insufficient_modularization_max_nesting_depth"
+        case missingAbstractionMaxElements = "missing_abstraction_max_elements"
+        case unstructuredModuleMaxElements = "unstructured_module_max_elements"
+    }
+
+    public init(
+        duplicateBlockTokens: Int = 150,
+        imperativeAbstractionMaxExecCount: Int = 2,
+        imperativeAbstractionExecRatio: Double = 0.20,
+        insufficientModularizationMaxLineCount: Int = 40,
+        insufficientModularizationMaxNestingDepth: Int = 3,
+        missingAbstractionMaxElements: Int = 2,
+        unstructuredModuleMaxElements: Int = 3
+    ) {
+        self.duplicateBlockTokens = duplicateBlockTokens
+        self.imperativeAbstractionMaxExecCount = imperativeAbstractionMaxExecCount
+        self.imperativeAbstractionExecRatio = imperativeAbstractionExecRatio
+        self.insufficientModularizationMaxLineCount = insufficientModularizationMaxLineCount
+        self.insufficientModularizationMaxNestingDepth = insufficientModularizationMaxNestingDepth
+        self.missingAbstractionMaxElements = missingAbstractionMaxElements
+        self.unstructuredModuleMaxElements = unstructuredModuleMaxElements
     }
 }
 
@@ -152,6 +204,7 @@ public struct Thresholds: Sendable {
     public let classSmells: ClassSmellThresholds
     public let methodSmells: MethodSmellThresholds
     public let structuralSmells: StructuralSmellThresholds
+    public let moduleSmells: ModuleSmellThresholds
 
     // MARK: - Cohesive Methods
 
@@ -197,7 +250,18 @@ public struct Thresholds: Sendable {
             messageChainLength: 5,
             brokenHierarchyDIT: 3,
             cyclicDependencyLength: 2,
-            featureEnvyThreshold: 3
+            featureEnvyThreshold: 3,
+            denseStructureDegree: 0.5,
+            weakenedModularityRatio: 1.0
+        ),
+        moduleSmells: ModuleSmellThresholds(
+            duplicateBlockTokens: 150,
+            imperativeAbstractionMaxExecCount: 2,
+            imperativeAbstractionExecRatio: 0.20,
+            insufficientModularizationMaxLineCount: 40,
+            insufficientModularizationMaxNestingDepth: 3,
+            missingAbstractionMaxElements: 2,
+            unstructuredModuleMaxElements: 3
         )
     )
 
@@ -228,7 +292,18 @@ public struct Thresholds: Sendable {
             messageChainLength: 4,
             brokenHierarchyDIT: 4,
             cyclicDependencyLength: 3,
-            featureEnvyThreshold: 4
+            featureEnvyThreshold: 4,
+            denseStructureDegree: 0.7,
+            weakenedModularityRatio: 1.2
+        ),
+        moduleSmells: ModuleSmellThresholds(
+            duplicateBlockTokens: 200,
+            imperativeAbstractionMaxExecCount: 3,
+            imperativeAbstractionExecRatio: 0.25,
+            insufficientModularizationMaxLineCount: 60,
+            insufficientModularizationMaxNestingDepth: 4,
+            missingAbstractionMaxElements: 3,
+            unstructuredModuleMaxElements: 4
         )
     )
 
@@ -259,18 +334,31 @@ public struct Thresholds: Sendable {
             messageChainLength: 2,
             brokenHierarchyDIT: 2,
             cyclicDependencyLength: 1,
-            featureEnvyThreshold: 2
+            featureEnvyThreshold: 2,
+            denseStructureDegree: 0.3,
+            weakenedModularityRatio: 0.8
+        ),
+        moduleSmells: ModuleSmellThresholds(
+            duplicateBlockTokens: 100,
+            imperativeAbstractionMaxExecCount: 1,
+            imperativeAbstractionExecRatio: 0.15,
+            insufficientModularizationMaxLineCount: 30,
+            insufficientModularizationMaxNestingDepth: 2,
+            missingAbstractionMaxElements: 1,
+            unstructuredModuleMaxElements: 2
         )
     )
 
     public init(
         classSmells: ClassSmellThresholds = .init(),
         methodSmells: MethodSmellThresholds = .init(),
-        structuralSmells: StructuralSmellThresholds = .init()
+        structuralSmells: StructuralSmellThresholds = .init(),
+        moduleSmells: ModuleSmellThresholds = .init()
     ) {
         self.classSmells = classSmells
         self.methodSmells = methodSmells
         self.structuralSmells = structuralSmells
+        self.moduleSmells = moduleSmells
     }
 
     // Legacy initializer for backward compatibility
@@ -320,7 +408,8 @@ public struct Thresholds: Sendable {
                 brokenHierarchyDIT: θ_DIT_BrokenHierarchy,
                 cyclicDependencyLength: θ_CycleLength,
                 featureEnvyThreshold: θ_FeatureEnvyThreshold
-            )
+            ),
+            moduleSmells: ModuleSmellThresholds()
         )
     }
 
@@ -363,6 +452,7 @@ extension Thresholds: Codable {
         case classSmells = "class_smells"
         case methodSmells = "method_smells"
         case structuralSmells = "structural_smells"
+        case moduleSmells = "module_smells"
     }
 }
 

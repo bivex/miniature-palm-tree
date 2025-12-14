@@ -11,13 +11,13 @@ import SwiftSyntax
 
 /// Detects dense dependency structures (Dense Structure)
 /// Based on DDS (Dense Structure):
-/// - Average dependency graph degree > 0.5
+/// - Average dependency graph degree > threshold
 public final class DenseStructureDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let denseAvgDegreeThreshold = 0.5
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.denseStructure])
     }
 
@@ -32,11 +32,11 @@ public final class DenseStructureDetector: BaseDefectDetector {
         // Calculate average degree (connections per type)
         let avgDegree = analysis.calculateAverageDegree()
 
-        if avgDegree > denseAvgDegreeThreshold {
+        if avgDegree > thresholds.structuralSmells.denseStructureDegree {
             let defect = ArchitecturalDefect(
                 type: .denseStructure,
                 severity: .high,
-                message: "File has dense dependency structure (average degree: \(String(format: "%.2f", avgDegree))) - exceeds threshold of \(denseAvgDegreeThreshold)",
+                message: "File has dense dependency structure (average degree: \(String(format: "%.2f", avgDegree))) - exceeds threshold of \(thresholds.structuralSmells.denseStructureDegree)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Reduce coupling by introducing interfaces, breaking circular dependencies, or using dependency injection"
             )

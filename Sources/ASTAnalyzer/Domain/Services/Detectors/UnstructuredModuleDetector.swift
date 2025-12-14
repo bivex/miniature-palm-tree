@@ -11,13 +11,13 @@ import SwiftSyntax
 
 /// Detects unstructured modules (Unstructured Module)
 /// Based on DUM (Unstructured Module):
-/// - Module structure violations or unexpected file/folder count > 3
+/// - Module structure violations or unexpected file/folder count > threshold
 public final class UnstructuredModuleDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let maxUnexpectedElements = 3
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.unstructuredModule])
     }
 
@@ -44,7 +44,7 @@ public final class UnstructuredModuleDetector: BaseDefectDetector {
 
         // Check for too many different element types (unexpected elements)
         let unexpectedElements = countUnexpectedElements(analysis)
-        if unexpectedElements > maxUnexpectedElements {
+        if unexpectedElements > thresholds.moduleSmells.unstructuredModuleMaxElements {
             let defect = ArchitecturalDefect(
                 type: .unstructuredModule,
                 severity: .medium,

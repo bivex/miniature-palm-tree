@@ -11,14 +11,13 @@ import SwiftSyntax
 
 /// Detects abstractions with too many imperative operations (Imperative Abstraction)
 /// Based on DIA (Imperative Abstraction):
-/// - execCount > 2 AND execRatio > 20% (where exec = imperative/side-effect operations)
+/// - execCount > threshold AND execRatio > threshold (where exec = imperative/side-effect operations)
 public final class ImperativeAbstractionDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let maxExecCount = 2
-    private let execRatioThreshold = 0.20
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.imperativeAbstraction])
     }
 
@@ -26,7 +25,7 @@ public final class ImperativeAbstractionDetector: BaseDefectDetector {
         var defects: [ArchitecturalDefect] = []
 
         // Analyze classes
-        let classVisitor = ImperativeTypeVisitor(maxExecCount: maxExecCount, execRatioThreshold: execRatioThreshold)
+        let classVisitor = ImperativeTypeVisitor(maxExecCount: thresholds.moduleSmells.imperativeAbstractionMaxExecCount, execRatioThreshold: thresholds.moduleSmells.imperativeAbstractionExecRatio)
         classVisitor.walk(sourceFile)
 
         for imperativeType in classVisitor.imperativeTypes {

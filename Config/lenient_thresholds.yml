@@ -22,3 +22,14 @@ structural_smells:
   broken_hierarchy_dit: 10
   cyclic_dependency_length: 5
   feature_envy_threshold: 4
+  dense_structure_degree: 0.7
+  weakened_modularity_ratio: 1.2
+
+module_smells:
+  duplicate_block_tokens: 200
+  imperative_abstraction_max_exec_count: 3
+  imperative_abstraction_exec_ratio: 0.25
+  insufficient_modularization_max_line_count: 60
+  insufficient_modularization_max_nesting_depth: 4
+  missing_abstraction_max_elements: 3
+  unstructured_module_max_elements: 4

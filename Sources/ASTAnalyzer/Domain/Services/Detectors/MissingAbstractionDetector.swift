@@ -11,13 +11,13 @@ import SwiftSyntax
 
 /// Detects missing abstraction (too many unencapsulated elements) (Missing Abstraction)
 /// Based on DMA (Missing Abstraction):
-/// - Unencapsulated elements in module > 2
+/// - Unencapsulated elements in module > threshold
 public final class MissingAbstractionDetector: BaseDefectDetector {
 
-    // Constants based on  et al. thresholds
-    private let maxUnencapsulatedElements = 2
+    private let thresholds: Thresholds
 
-    public init() {
+    public init(thresholds: Thresholds = .academic) {
+        self.thresholds = thresholds
         super.init(detectableDefects: [.missingAbstraction])
     }
 
@@ -26,12 +26,12 @@ public final class MissingAbstractionDetector: BaseDefectDetector {
 
         let unencapsulatedElements = countUnencapsulatedElements(in: sourceFile)
 
-        if unencapsulatedElements.count > maxUnencapsulatedElements {
+        if unencapsulatedElements.count > thresholds.moduleSmells.missingAbstractionMaxElements {
             let elementTypes = unencapsulatedElements.map { $0.type }.joined(separator: ", ")
             let defect = ArchitecturalDefect(
                 type: .missingAbstraction,
                 severity: .medium,
-                message: "File contains \(unencapsulatedElements.count) unencapsulated elements (\(elementTypes)) - exceeds maximum of \(maxUnencapsulatedElements)",
+                message: "File contains \(unencapsulatedElements.count) unencapsulated elements (\(elementTypes)) - exceeds maximum of \(thresholds.moduleSmells.missingAbstractionMaxElements)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Encapsulate global elements in appropriate types or consider using access control modifiers"
             )
