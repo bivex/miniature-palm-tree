@@ -87,7 +87,7 @@ public final class ConsoleApplication {
 
     private func finalizeMemoryProfiling(_ profiler: MemoryProfiler?) {
         profiler?.takeSnapshot(label: "end")
-        profiler?.printMemoryReport()
+        profiler?.outputMemoryReport()
     }
 
     private func performAnalysis(with config: AnalysisConfig) async throws -> SmellReport {

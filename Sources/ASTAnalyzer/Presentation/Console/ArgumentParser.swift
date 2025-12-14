@@ -35,10 +35,10 @@ public enum PathType {
 /// Service responsible for parsing command line arguments
 public final class ArgumentParser {
 
-    private let fileManager: FileManager
+    private let fileSystemValidator: FileSystemValidator
 
-    public init(fileManager: FileManager = .default) {
-        self.fileManager = fileManager
+    public init(fileSystemValidator: FileSystemValidator = DefaultFileSystemValidator()) {
+        self.fileSystemValidator = fileSystemValidator
     }
 
     /// Parses command line arguments into configuration
@@ -51,11 +51,11 @@ public final class ArgumentParser {
         let (enableJSONExport, jsonOutputDirectory, enableMarkdownExport, markdownOutputDirectory, thresholdsFilePath, pathArgumentIndex) = parseExportOptions(arguments)
 
         let path = arguments[pathArgumentIndex]
-        let pathType = try validatePath(path, executableName: arguments[0])
+        let pathType = try fileSystemValidator.validatePath(path)
 
-        try validateAndCreateJSONOutputDirectory(jsonOutputDirectory, executableName: arguments[0])
-        try validateAndCreateMarkdownOutputDirectory(markdownOutputDirectory, executableName: arguments[0])
-        try validateThresholdsFile(thresholdsFilePath, executableName: arguments[0])
+        try fileSystemValidator.validateAndCreateJSONOutputDirectory(jsonOutputDirectory)
+        try fileSystemValidator.validateAndCreateMarkdownOutputDirectory(markdownOutputDirectory)
+        try fileSystemValidator.validateThresholdsFile(thresholdsFilePath)
 
         return AnalysisConfig(
             pathType: pathType,
@@ -132,12 +132,7 @@ public final class ArgumentParser {
             processedArgs.insert(filePath)
 
             // Convert relative path to absolute path
-            if !filePath.hasPrefix("/") {
-                let currentDirectory = fileManager.currentDirectoryPath
-                return (currentDirectory as NSString).appendingPathComponent(filePath)
-            }
-
-            return filePath
+            return fileSystemValidator.resolveAbsolutePath(filePath)
         }
 
         return nil
@@ -152,110 +147,4 @@ public final class ArgumentParser {
         return 1
     }
 
-    private func validatePath(_ path: String, executableName: String) throws -> PathType {
-        // Validate path
-        guard !path.isEmpty else {
-            throw ApplicationError.invalidArguments(
-                message: "Path cannot be empty",
-                example: "\(executableName) /path/to/file.swift --json /path/to/output"
-            )
-        }
-
-        var isDirectory: ObjCBool = false
-
-        guard fileManager.fileExists(atPath: path, isDirectory: &isDirectory) else {
-            throw ApplicationError.invalidArguments(
-                message: "Path '\(path)' does not exist",
-                example: "\(executableName) /path/to/file.swift --json /path/to/output"
-            )
-        }
-
-        if isDirectory.boolValue {
-            return .directory(path)
-        } else {
-            // Validate it's a Swift file
-            guard path.hasSuffix(".swift") else {
-                throw ApplicationError.invalidArguments(
-                    message: "File must be a Swift source file (.swift)",
-                    example: "\(executableName) /path/to/file.swift --json /path/to/output"
-                )
-            }
-            return .file(path)
-        }
-    }
-
-    private func validateAndCreateJSONOutputDirectory(_ outputDir: String?, executableName: String) throws {
-        guard let outputDir = outputDir else { return }
-
-        var isOutputDir: ObjCBool = false
-        if fileManager.fileExists(atPath: outputDir, isDirectory: &isOutputDir) {
-            guard isOutputDir.boolValue else {
-                throw ApplicationError.invalidArguments(
-                    message: "JSON output path must be a directory: \(outputDir)",
-                    example: "\(executableName) /path/to/file.swift --json /path/to/output/dir"
-                )
-            }
-        } else {
-            // Directory doesn't exist, we'll create it
-            do {
-                try fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
-            } catch {
-                throw ApplicationError.invalidArguments(
-                    message: "Cannot create JSON output directory: \(outputDir)",
-                    example: "\(executableName) /path/to/file.swift --json /path/to/output/dir"
-                )
-            }
-        }
-    }
-
-    private func validateAndCreateMarkdownOutputDirectory(_ outputDir: String?, executableName: String) throws {
-        guard let outputDir = outputDir else { return }
-
-        var isOutputDir: ObjCBool = false
-        if fileManager.fileExists(atPath: outputDir, isDirectory: &isOutputDir) {
-            guard isOutputDir.boolValue else {
-                throw ApplicationError.invalidArguments(
-                    message: "Markdown output path must be a directory: \(outputDir)",
-                    example: "\(executableName) /path/to/file.swift --markdown /path/to/output/dir"
-                )
-            }
-        } else {
-            // Directory doesn't exist, we'll create it
-            do {
-                try fileManager.createDirectory(atPath: outputDir, withIntermediateDirectories: true)
-            } catch {
-                throw ApplicationError.invalidArguments(
-                    message: "Cannot create Markdown output directory: \(outputDir)",
-                    example: "\(executableName) /path/to/file.swift --markdown /path/to/output/dir"
-                )
-            }
-        }
-    }
-
-    private func validateThresholdsFile(_ thresholdsFile: String?, executableName: String) throws {
-        guard let thresholdsFile = thresholdsFile else { return }
-
-        var isDirectory: ObjCBool = false
-        guard fileManager.fileExists(atPath: thresholdsFile, isDirectory: &isDirectory) else {
-            throw ApplicationError.invalidArguments(
-                message: "Thresholds file does not exist: \(thresholdsFile)",
-                example: "\(executableName) /path/to/file.swift --thresholds /path/to/thresholds.yml"
-            )
-        }
-
-        guard !isDirectory.boolValue else {
-            throw ApplicationError.invalidArguments(
-                message: "Thresholds path must be a file, not a directory: \(thresholdsFile)",
-                example: "\(executableName) /path/to/file.swift --thresholds /path/to/thresholds.yml"
-            )
-        }
-
-        // Check if it's a YAML file
-        guard thresholdsFile.hasSuffix(".yml") || thresholdsFile.hasSuffix(".yaml") else {
-            throw ApplicationError.invalidArguments(
-                message: "Thresholds file must be a YAML file (.yml or .yaml): \(thresholdsFile)",
-                example: "\(executableName) /path/to/file.swift --thresholds /path/to/thresholds.yml"
-            )
-        }
-    }
 }

@@ -22,10 +22,11 @@ public final class UnnecessaryAbstractionDetector: BaseDefectDetector {
         var defects: [ArchitecturalDefect] = []
 
         // Analyze classes
-        let classVisitor = EmptyTypeVisitor()
-        classVisitor.walk(sourceFile)
+        let dataCollector = DefaultEmptyTypeDataCollector()
+        let visitor = EmptyTypePureVisitor(dataCollector: dataCollector)
+        visitor.walk(sourceFile)
 
-        for emptyType in classVisitor.emptyTypes {
+        for emptyType in dataCollector.getCollectedData() {
             let defect = ArchitecturalDefect(
                 type: .unnecessaryAbstraction,
                 severity: .medium,
@@ -37,62 +38,5 @@ public final class UnnecessaryAbstractionDetector: BaseDefectDetector {
         }
 
         return defects
-    }
-}
-
-// MARK: - Private Structures
-
-private struct EmptyTypeInfo {
-    let typeName: String // "Class", "Struct", "Enum", etc.
-    let name: String
-}
-
-// MARK: - Private Visitors
-
-private class EmptyTypeVisitor: SyntaxVisitor {
-    var emptyTypes: [EmptyTypeInfo] = []
-
-    init() {
-        super.init(viewMode: .sourceAccurate)
-    }
-
-    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        if isEmpty(node.memberBlock) {
-            emptyTypes.append(EmptyTypeInfo(typeName: "Class", name: node.name.text))
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        if isEmpty(node.memberBlock) {
-            emptyTypes.append(EmptyTypeInfo(typeName: "Struct", name: node.name.text))
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        if isEmpty(node.memberBlock) {
-            emptyTypes.append(EmptyTypeInfo(typeName: "Enum", name: node.name.text))
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        if isEmpty(node.memberBlock) {
-            emptyTypes.append(EmptyTypeInfo(typeName: "Actor", name: node.name.text))
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        if isEmpty(node.memberBlock) {
-            emptyTypes.append(EmptyTypeInfo(typeName: "Protocol", name: node.name.text))
-        }
-        return .visitChildren
-    }
-
-    private func isEmpty(_ memberBlock: MemberBlockSyntax) -> Bool {
-        // Check if member block has no members or only contains empty declarations
-        return memberBlock.members.isEmpty
     }
 }

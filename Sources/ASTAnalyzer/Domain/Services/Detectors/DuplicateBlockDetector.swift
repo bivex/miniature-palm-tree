@@ -42,50 +42,13 @@ public final class DuplicateBlockDetector: BaseDefectDetector {
     }
 
     private func extractCodeBlocks(from sourceFile: SourceFileSyntax) -> [CodeBlock] {
-        let extractor = CodeBlockExtractor()
-        extractor.walk(sourceFile)
-        return extractor.blocks
+        let dataCollector = CodeBlockDataCollector()
+        let visitor = CodeBlockVisitor(dataCollector: dataCollector)
+        visitor.walk(sourceFile)
+        return dataCollector.getCollectedData()
     }
 
-    private class CodeBlockExtractor: SyntaxVisitor {
-        var blocks: [CodeBlock] = []
-
-        init() {
-            super.init(viewMode: .sourceAccurate)
-        }
-
-        override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-            if let body = node.body,
-               let block = DuplicateBlockDetector.createCodeBlockFromSyntax(body: body, type: .function, name: node.name.text, minTokens: 10) {
-                blocks.append(block)
-            }
-            return .visitChildren
-        }
-
-        override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-            if let body = node.body,
-               let block = DuplicateBlockDetector.createCodeBlockFromSyntax(body: body, type: .initializer, name: "init", minTokens: 10) {
-                blocks.append(block)
-            }
-            return .visitChildren
-        }
-
-        override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
-            if let block = DuplicateBlockDetector.createCodeBlockFromSyntax(body: node.body, type: .controlFlow, name: "for-loop", minTokens: 20) {
-                blocks.append(block)
-            }
-            return .visitChildren
-        }
-
-        override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
-            if let block = DuplicateBlockDetector.createCodeBlockFromSyntax(body: node.body, type: .controlFlow, name: "while-loop", minTokens: 20) {
-                blocks.append(block)
-            }
-            return .visitChildren
-        }
-    }
-
-    private static func createCodeBlockFromSyntax(body: some SyntaxProtocol, type: BlockType, name: String, minTokens: Int) -> CodeBlock? {
+    public static func createCodeBlockFromSyntax(body: some SyntaxProtocol, type: BlockType, name: String, minTokens: Int) -> CodeBlock? {
         let content = body.description.trimmingCharacters(in: .whitespacesAndNewlines)
         let tokenCount = estimateTokenCount(content)
         if tokenCount > minTokens {
@@ -135,9 +98,9 @@ public final class DuplicateBlockDetector: BaseDefectDetector {
 
 }
 
-// MARK: - Private Structures
+// MARK: - Structures
 
-private struct CodeBlock {
+public struct CodeBlock {
     let content: String
     let tokenCount: Int
     let type: BlockType
@@ -157,7 +120,7 @@ private struct CodeBlock {
     }
 }
 
-private enum BlockType {
+public enum BlockType {
     case function
     case initializer
     case controlFlow

@@ -12,6 +12,14 @@ public final class MemoryProfiler {
 
     private var memorySnapshots: [MemorySnapshot] = []
     private let startTime = Date()
+    private let snapshotOutputHandler: SnapshotOutputHandler
+    private let reportFormatter: MemoryReportFormatter
+
+    public init(snapshotOutputHandler: SnapshotOutputHandler = ConsoleSnapshotOutputHandler(),
+                reportFormatter: MemoryReportFormatter = ConsoleMemoryReportFormatter()) {
+        self.snapshotOutputHandler = snapshotOutputHandler
+        self.reportFormatter = reportFormatter
+    }
 
     /// Represents a memory snapshot at a specific point in time
     public struct MemorySnapshot {
@@ -42,8 +50,6 @@ public final class MemoryProfiler {
         public var peakResidentSizeMB: Double { Double(peakResidentSize) / 1024.0 / 1024.0 }
     }
 
-    public init() {}
-
     /// Takes a memory snapshot
     public func takeSnapshot(label: String = "") {
         let stats = getMemoryStats()
@@ -55,9 +61,7 @@ public final class MemoryProfiler {
         )
         memorySnapshots.append(snapshot)
 
-        if !label.isEmpty {
-            print("📊 Memory snapshot '\(label)': \(String(format: "%.2f", snapshot.residentSizeMB)) MB RSS")
-        }
+        snapshotOutputHandler.outputSnapshot(snapshot: snapshot, label: label)
     }
 
     /// Gets current memory statistics
@@ -145,32 +149,11 @@ public final class MemoryProfiler {
         )
     }
 
-    /// Prints a detailed memory report
-    public func printMemoryReport() {
-        print("\n📊 Memory Profiling Report")
-        print("==========================")
-
+    /// Outputs a detailed memory report using the configured formatter
+    public func outputMemoryReport() {
         let stats = getMemoryStats()
-        print("Current Memory Usage:")
-        print("  Resident Size (RSS): \(String(format: "%.2f", stats.residentSizeMB)) MB")
-        print("  Virtual Size (VSZ): \(String(format: "%.2f", stats.virtualSizeMB)) MB")
-        print("  Peak RSS: \(String(format: "%.2f", stats.peakResidentSizeMB)) MB")
-
-        if !memorySnapshots.isEmpty {
-            print("\nSnapshot History (\(memorySnapshots.count) snapshots):")
-            for (index, snapshot) in memorySnapshots.enumerated() {
-                let timeDesc = snapshot.timestampDescription
-                let rssMB = Double(snapshot.residentSize) / 1024.0 / 1024.0
-                let vszMB = Double(snapshot.virtualSize) / 1024.0 / 1024.0
-                print("  \(index + 1). \(timeDesc)s: RSS=\(String(format: "%.2f", rssMB)) MB, VSZ=\(String(format: "%.2f", vszMB)) MB")
-            }
-        }
-
         let analysis = analyzeMemoryUsage()
-        print("\nAnalysis:")
-        for recommendation in analysis.recommendations {
-            print("  \(recommendation)")
-        }
+        reportFormatter.outputMemoryReport(stats: stats, snapshots: memorySnapshots, analysis: analysis)
     }
 
     /// Resets profiling data
