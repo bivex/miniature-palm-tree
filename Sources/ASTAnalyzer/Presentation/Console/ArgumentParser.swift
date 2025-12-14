@@ -35,9 +35,12 @@ public enum PathType {
 /// Service responsible for parsing command line arguments
 public final class ArgumentParser {
 
+    private let argumentProcessingHandler: ArgumentProcessingHandler
     private let fileSystemValidator: FileSystemValidator
 
-    public init(fileSystemValidator: FileSystemValidator = DefaultFileSystemValidator()) {
+    public init(argumentProcessingHandler: ArgumentProcessingHandler = DefaultArgumentProcessingHandler(),
+                fileSystemValidator: FileSystemValidator = DefaultFileSystemValidator()) {
+        self.argumentProcessingHandler = argumentProcessingHandler
         self.fileSystemValidator = fileSystemValidator
     }
 
@@ -48,7 +51,8 @@ public final class ArgumentParser {
     public func parseArguments(_ arguments: [String]) throws -> AnalysisConfig {
         try validateArgumentCount(arguments)
 
-        let (enableJSONExport, jsonOutputDirectory, enableMarkdownExport, markdownOutputDirectory, thresholdsFilePath, pathArgumentIndex) = parseExportOptions(arguments)
+        let stateHandler = DefaultArgumentStateHandler()
+        let (enableJSONExport, jsonOutputDirectory, enableMarkdownExport, markdownOutputDirectory, thresholdsFilePath, pathArgumentIndex) = parseExportOptions(arguments, stateHandler: stateHandler)
 
         let path = arguments[pathArgumentIndex]
         let pathType = try fileSystemValidator.validatePath(path)
@@ -80,56 +84,54 @@ public final class ArgumentParser {
         }
     }
 
-    private func parseExportOptions(_ arguments: [String]) -> (enableJSONExport: Bool, jsonOutputDirectory: String?, enableMarkdownExport: Bool, markdownOutputDirectory: String?, thresholdsFilePath: String?, pathArgumentIndex: Int) {
-        var processedArgs = Set<String>()
-
-        let (enableJSONExport, jsonOutputDirectory) = parseJSONFlag(arguments, processedArgs: &processedArgs)
-        let (enableMarkdownExport, markdownOutputDirectory) = parseMarkdownFlag(arguments, processedArgs: &processedArgs)
-        let thresholdsFilePath = parseThresholdsFlag(arguments, processedArgs: &processedArgs)
-        let pathArgumentIndex = determinePathArgumentIndex(arguments, processedArgs: processedArgs)
+    private func parseExportOptions(_ arguments: [String], stateHandler: ArgumentStateHandler) -> (enableJSONExport: Bool, jsonOutputDirectory: String?, enableMarkdownExport: Bool, markdownOutputDirectory: String?, thresholdsFilePath: String?, pathArgumentIndex: Int) {
+        let (enableJSONExport, jsonOutputDirectory) = parseJSONFlag(arguments, stateHandler: stateHandler)
+        let (enableMarkdownExport, markdownOutputDirectory) = parseMarkdownFlag(arguments, stateHandler: stateHandler)
+        let thresholdsFilePath = parseThresholdsFlag(arguments, stateHandler: stateHandler)
+        let pathArgumentIndex = determinePathArgumentIndex(arguments, stateHandler: stateHandler)
 
         return (enableJSONExport, jsonOutputDirectory, enableMarkdownExport, markdownOutputDirectory, thresholdsFilePath, pathArgumentIndex)
     }
 
-    private func parseJSONFlag(_ arguments: [String], processedArgs: inout Set<String>) -> (enabled: Bool, directory: String?) {
+    private func parseJSONFlag(_ arguments: [String], stateHandler: ArgumentStateHandler) -> (enabled: Bool, directory: String?) {
         guard arguments.contains("--json") else { return (false, nil) }
 
         let jsonIndex = arguments.firstIndex(of: "--json")!
-        processedArgs.insert("--json")
+        stateHandler.addProcessedArgument("--json")
 
         if jsonIndex + 1 < arguments.count && !arguments[jsonIndex + 1].hasPrefix("-") {
             let directory = arguments[jsonIndex + 1]
-            processedArgs.insert(directory)
+            stateHandler.addProcessedArgument(directory)
             return (true, directory)
         }
 
         return (true, nil)
     }
 
-    private func parseMarkdownFlag(_ arguments: [String], processedArgs: inout Set<String>) -> (enabled: Bool, directory: String?) {
+    private func parseMarkdownFlag(_ arguments: [String], stateHandler: ArgumentStateHandler) -> (enabled: Bool, directory: String?) {
         guard arguments.contains("--markdown") else { return (false, nil) }
 
         let markdownIndex = arguments.firstIndex(of: "--markdown")!
-        processedArgs.insert("--markdown")
+        stateHandler.addProcessedArgument("--markdown")
 
-        if markdownIndex + 1 < arguments.count && !arguments[markdownIndex + 1].hasPrefix("-") && !processedArgs.contains(arguments[markdownIndex + 1]) {
+        if markdownIndex + 1 < arguments.count && !arguments[markdownIndex + 1].hasPrefix("-") && !stateHandler.isArgumentProcessed(arguments[markdownIndex + 1]) {
             let directory = arguments[markdownIndex + 1]
-            processedArgs.insert(directory)
+            stateHandler.addProcessedArgument(directory)
             return (true, directory)
         }
 
         return (true, nil)
     }
 
-    private func parseThresholdsFlag(_ arguments: [String], processedArgs: inout Set<String>) -> String? {
+    private func parseThresholdsFlag(_ arguments: [String], stateHandler: ArgumentStateHandler) -> String? {
         guard arguments.contains("--thresholds") else { return nil }
 
         let thresholdsIndex = arguments.firstIndex(of: "--thresholds")!
-        processedArgs.insert("--thresholds")
+        stateHandler.addProcessedArgument("--thresholds")
 
         if thresholdsIndex + 1 < arguments.count && !arguments[thresholdsIndex + 1].hasPrefix("-") {
             let filePath = arguments[thresholdsIndex + 1]
-            processedArgs.insert(filePath)
+            stateHandler.addProcessedArgument(filePath)
 
             // Convert relative path to absolute path
             return fileSystemValidator.resolveAbsolutePath(filePath)
@@ -138,9 +140,9 @@ public final class ArgumentParser {
         return nil
     }
 
-    private func determinePathArgumentIndex(_ arguments: [String], processedArgs: Set<String>) -> Int {
+    private func determinePathArgumentIndex(_ arguments: [String], stateHandler: ArgumentStateHandler) -> Int {
         for (index, arg) in arguments.enumerated() {
-            if index > 0 && !arg.hasPrefix("-") && !processedArgs.contains(arg) {
+            if index > 0 && !arg.hasPrefix("-") && !stateHandler.isArgumentProcessed(arg) {
                 return index
             }
         }

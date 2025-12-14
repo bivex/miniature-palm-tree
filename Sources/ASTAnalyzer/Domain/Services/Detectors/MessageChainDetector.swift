@@ -100,16 +100,6 @@ private struct MethodInfo {
     let node: FunctionDeclSyntax
 }
 
-private struct MessageChain {
-    let calls: [String]
-    let length: Int
-
-    init(calls: [String]) {
-        self.calls = calls
-        self.length = calls.count
-    }
-}
-
 // MARK: - Private Visitors
 
 private class MessageChainVisitor: SyntaxVisitor {
@@ -151,16 +141,19 @@ private class MessageChainVisitor: SyntaxVisitor {
 }
 
 private class ChainDetectionVisitor: SyntaxVisitor {
-    var chains: [MessageChain] = []
+    private let stateHandler: MessageChainStateHandler
 
-    init() {
+    var chains: [MessageChain] { stateHandler.chainsResult }
+
+    init(stateHandler: MessageChainStateHandler = DefaultMessageChainStateHandler()) {
+        self.stateHandler = stateHandler
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
         let chain = extractChain(from: node)
         if chain.length >= 2 {
-            chains.append(chain)
+            stateHandler.recordMessageChain(chain)
         }
         return .visitChildren
     }
@@ -169,7 +162,7 @@ private class ChainDetectionVisitor: SyntaxVisitor {
         // For optional chaining, we can analyze the expression inside
         let chain = extractChainFromOptionalChaining(node)
         if chain.length >= 2 {
-            chains.append(chain)
+            stateHandler.recordMessageChain(chain)
         }
         return .visitChildren
     }

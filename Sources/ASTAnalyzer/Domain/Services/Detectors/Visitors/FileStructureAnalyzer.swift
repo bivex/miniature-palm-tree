@@ -11,52 +11,54 @@ import SwiftSyntax
 
 /// Visitor that analyzes Swift file structure for architectural issues
 final class FileStructureAnalyzer: SyntaxVisitor {
-    var analysis = StructureAnalysis()
+    private let analysisHandler: StructureAnalysisHandler
 
-    init() {
+    var analysis: StructureAnalysis { analysisHandler.result }
+
+    init(analysisHandler: StructureAnalysisHandler = DefaultStructureAnalysisHandler()) {
+        self.analysisHandler = analysisHandler
         super.init(viewMode: .sourceAccurate)
     }
 
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasClasses = true
-        analysis.layers.insert(inferLayer(from: node))
+        analysisHandler.recordClassFound()
+        analysisHandler.recordLayer(inferLayer(from: node))
         return .visitChildren
     }
 
     override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasStructs = true
-        analysis.layers.insert(inferLayer(from: node))
+        analysisHandler.recordStructFound()
+        analysisHandler.recordLayer(inferLayer(from: node))
         return .visitChildren
     }
 
     override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasEnums = true
-        analysis.layers.insert(inferLayer(from: node))
+        analysisHandler.recordEnumFound()
+        analysisHandler.recordLayer(inferLayer(from: node))
         return .visitChildren
     }
 
     override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasProtocols = true
-        analysis.layers.insert(inferLayer(from: node))
+        analysisHandler.recordProtocolFound()
+        analysisHandler.recordLayer(inferLayer(from: node))
         return .visitChildren
     }
 
     override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasActors = true
-        analysis.layers.insert(inferLayer(from: node))
+        analysisHandler.recordActorFound()
+        analysisHandler.recordLayer(inferLayer(from: node))
         return .visitChildren
     }
 
     override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-        analysis.hasExtensions = true
+        analysisHandler.recordExtensionFound()
         return .visitChildren
     }
 
     override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
         // Check if it's a global function (not inside a type)
         if !isInsideTypeDeclaration(node) {
-            analysis.hasGlobalFunctions = true
-            analysis.layers.insert("Utility")
+            analysisHandler.recordGlobalFunctionFound()
         }
         return .visitChildren
     }
@@ -64,8 +66,7 @@ final class FileStructureAnalyzer: SyntaxVisitor {
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
         // Check if it's a global variable
         if !isInsideTypeDeclaration(node) {
-            analysis.hasGlobalVariables = true
-            analysis.layers.insert("Data")
+            analysisHandler.recordGlobalVariableFound()
         }
         return .visitChildren
     }

@@ -11,25 +11,29 @@ import Foundation
 /// Console implementation of DirectoryOutputFormatter that handles actual printing
 public final class ConsoleDirectoryOutputFormatter: DirectoryOutputFormatter {
 
-    public init() {}
+    private let outputHandler: ConsoleOutputHandler
+
+    public init(outputHandler: ConsoleOutputHandler = StandardConsoleOutputHandler()) {
+        self.outputHandler = outputHandler
+    }
 
     public func outputDirectoryHeader(for result: DirectoryAnalysisResult) {
-        print("🔍 Directory Architectural Analysis Report")
-        print("=" * 70)
-        print("📁 Directory: \(result.directoryPath)")
-        print("📊 Total Swift Files: \(result.totalFiles)")
-        print("⏱️  Analysis Time: \(String(format: "%.2f", result.analysisDuration))s")
-        print()
+        outputHandler.outputLine("🔍 Directory Architectural Analysis Report")
+        outputHandler.outputLine(String(repeating: "=", count: 70))
+        outputHandler.outputLine("📁 Directory: \(result.directoryPath)")
+        outputHandler.outputLine("📊 Total Swift Files: \(result.totalFiles)")
+        outputHandler.outputLine("⏱️  Analysis Time: \(String(format: "%.2f", result.analysisDuration))s")
+        outputHandler.outputEmptyLine()
     }
 
     public func outputDirectorySummary(for result: DirectoryAnalysisResult) {
-        print("📈 DIRECTORY SUMMARY:")
-        print("-" * 40)
+        outputHandler.outputLine("📈 DIRECTORY SUMMARY:")
+        outputHandler.outputLine(String(repeating: "-", count: 40))
 
-        print("✅ Successfully analyzed: \(result.totalFiles) files")
+        outputHandler.outputLine("✅ Successfully analyzed: \(result.totalFiles) files")
 
         if !result.failedFiles.isEmpty {
-            print("❌ Failed to analyze: \(result.totalFailedFiles) files")
+            outputHandler.outputLine("❌ Failed to analyze: \(result.totalFailedFiles) files")
         }
 
         if result.hasIssues {
@@ -37,34 +41,34 @@ public final class ConsoleDirectoryOutputFormatter: DirectoryOutputFormatter {
             let high = result.highPriorityDefects
             let total = result.totalDefects
 
-            print("🚨 Critical Issues: \(critical)")
-            print("⚠️  High Priority: \(high)")
-            print("📊 Total Defects: \(total)")
-            print("🎯 Average Maintainability Score: \(String(format: "%.1f", result.averageMaintainabilityScore))/100")
+            outputHandler.outputLine("🚨 Critical Issues: \(critical)")
+            outputHandler.outputLine("⚠️  High Priority: \(high)")
+            outputHandler.outputLine("📊 Total Defects: \(total)")
+            outputHandler.outputLine("🎯 Average Maintainability Score: \(String(format: "%.1f", result.averageMaintainabilityScore))/100")
 
             if result.requiresRefactoring {
-                print("🔴 STATUS: Requires immediate refactoring")
+                outputHandler.outputLine("🔴 STATUS: Requires immediate refactoring")
             } else if result.hasCriticalIssues {
-                print("🟡 STATUS: Needs attention")
+                outputHandler.outputLine("🟡 STATUS: Needs attention")
             } else {
-                print("🟢 STATUS: Good, but could be improved")
+                outputHandler.outputLine("🟢 STATUS: Good, but could be improved")
             }
         } else {
-            print("✅ No architectural issues detected")
-            print("🎯 Average Maintainability Score: 100.0/100")
-            print("🟢 STATUS: Excellent")
+            outputHandler.outputLine("✅ No architectural issues detected")
+            outputHandler.outputLine("🎯 Average Maintainability Score: 100.0/100")
+            outputHandler.outputLine("🟢 STATUS: Excellent")
         }
-        print()
+        outputHandler.outputEmptyLine()
     }
 
     public func outputFailedFiles(for result: DirectoryAnalysisResult) {
-        print("❌ FAILED FILES:")
-        print("-" * 30)
+        outputHandler.outputLine("❌ FAILED FILES:")
+        outputHandler.outputLine(String(repeating: "-", count: 30))
         for (filePath, error) in result.failedFiles {
             let fileName = URL(fileURLWithPath: filePath).lastPathComponent
-            print("• \(fileName): \(error.localizedDescription)")
+            outputHandler.outputLine("• \(fileName): \(error.localizedDescription)")
         }
-        print()
+        outputHandler.outputEmptyLine()
     }
 
     public func outputDirectoryDefects(for result: DirectoryAnalysisResult) {
@@ -103,49 +107,49 @@ public final class ConsoleDirectoryOutputFormatter: DirectoryOutputFormatter {
                                        overflowMessage: String) {
         guard let defects = defects, !defects.isEmpty else { return }
 
-        print("\(emoji) \(title) (\(defects.count)):")
-        print(String(repeating: "-", count: title.count + 12))
+        outputHandler.outputLine("\(emoji) \(title) (\(defects.count)):")
+        outputHandler.outputLine(String(repeating: "-", count: title.count + 12))
 
         for defect in defects.prefix(maxItems) {
             let fileName = URL(fileURLWithPath: defect.location.filePath).lastPathComponent
-            print("• \(fileName): \(defect.message)")
+            outputHandler.outputLine("• \(fileName): \(defect.message)")
 
             if let line = defect.location.lineNumber {
-                print("  📍 line \(line)\(defect.location.context.map { " (\($0))" } ?? "")")
+                outputHandler.outputLine("  📍 line \(line)\(defect.location.context.map { " (\($0))" } ?? "")")
             } else {
-                print("  📍 \(defect.location.context ?? "general")")
+                outputHandler.outputLine("  📍 \(defect.location.context ?? "general")")
             }
         }
 
         if defects.count > maxItems {
-            print("... and \(defects.count - maxItems) \(overflowMessage)")
+            outputHandler.outputLine("... and \(defects.count - maxItems) \(overflowMessage)")
         }
-        print()
+        outputHandler.outputEmptyLine()
     }
 
     public func outputSuccessMessage() {
-        print("🎉 Congratulations!")
-        print("Your codebase follows good architectural practices.")
-        print()
+        outputHandler.outputLine("🎉 Congratulations!")
+        outputHandler.outputLine("Your codebase follows good architectural practices.")
+        outputHandler.outputEmptyLine()
     }
 
     public func outputDirectoryFooter(for result: DirectoryAnalysisResult) {
-        print("=" * 70)
-        print("Directory analysis completed at \(formatDate(result.analyzedAt))")
-        print("Use individual file analysis for detailed reports on specific files!")
+        outputHandler.outputLine(String(repeating: "=", count: 70))
+        outputHandler.outputLine("Directory analysis completed at \(formatDate(result.analyzedAt))")
+        outputHandler.outputLine("Use individual file analysis for detailed reports on specific files!")
     }
 
     public func outputDetailedFileAnalysis(for result: DirectoryAnalysisResult, filePresenter: AnalysisResultPresenter) {
         // Optionally show detailed results for each file
         if result.hasIssues && result.totalFiles <= 10 {
-            print("\n📄 DETAILED FILE ANALYSIS:")
-            print("=" * 60)
+            outputHandler.outputLine("\n📄 DETAILED FILE ANALYSIS:")
+            outputHandler.outputLine(String(repeating: "=", count: 60))
             for fileResult in result.fileResults where fileResult.hasIssues {
-                print()
+                outputHandler.outputEmptyLine()
                 filePresenter.present(result: fileResult)
             }
         } else if result.totalFiles > 10 {
-            print("\n💡 Tip: Use individual file analysis for detailed reports")
+            outputHandler.outputLine("\n💡 Tip: Use individual file analysis for detailed reports")
         }
     }
 

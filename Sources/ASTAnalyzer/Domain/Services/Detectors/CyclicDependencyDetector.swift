@@ -135,16 +135,13 @@ private struct DependencyGraph {
 // MARK: - Private Visitors
 
 private class DependencyGraphVisitor: SyntaxVisitor {
-    private var classes: [String: ClassInfo] = [:]
-    private var dependencies: [(from: String, to: String)] = []
+    private let stateHandler: DependencyGraphStateHandler
 
-    struct ClassInfo {
-        let name: String
-        let attributes: [String]
-        let methods: [String]
-    }
+    var classes: [String: ClassInfo] { stateHandler.classesResult }
+    var dependencies: [(from: String, to: String)] { stateHandler.dependenciesResult }
 
-    init() {
+    init(stateHandler: DependencyGraphStateHandler = DefaultDependencyGraphStateHandler()) {
+        self.stateHandler = stateHandler
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -166,13 +163,13 @@ private class DependencyGraphVisitor: SyntaxVisitor {
             }
         }
 
-        classes[className] = ClassInfo(name: className, attributes: attributes, methods: methods)
+        stateHandler.recordClass(name: className, attributes: attributes, methods: methods)
 
         // Analyze inheritance dependencies
         if let inheritanceClause = node.inheritanceClause {
             for inheritedType in inheritanceClause.inheritedTypes {
                 let inheritedTypeName = inheritedType.type.description.trimmingCharacters(in: .whitespaces)
-                dependencies.append((from: className, to: inheritedTypeName))
+                stateHandler.recordDependency(from: className, to: inheritedTypeName)
             }
         }
 
@@ -194,7 +191,7 @@ private class DependencyGraphVisitor: SyntaxVisitor {
             }
         }
 
-        classes[className] = ClassInfo(name: className, attributes: attributes, methods: [])
+        stateHandler.recordStruct(name: className, attributes: attributes)
 
         return .visitChildren
     }
@@ -219,10 +216,12 @@ private class DependencyGraphVisitor: SyntaxVisitor {
               let body = node.body else { return .skipChildren }
 
         // Analyze method body for dependencies
-        let methodVisitor = MethodDependencyVisitor(containingClass: className)
-        methodVisitor.walk(body, classNames: Set(classes.keys))
+        let methodVisitor = MethodDependencyVisitor(containingClass: className, stateHandler: stateHandler)
+        methodVisitor.walk(body, classNames: Set(stateHandler.classesResult.keys))
 
-        dependencies.append(contentsOf: methodVisitor.dependencies)
+        for dependency in methodVisitor.dependencies {
+            stateHandler.recordDependency(from: dependency.from, to: dependency.to)
+        }
 
         return .skipChildren
     }
@@ -232,22 +231,24 @@ private class DependencyGraphVisitor: SyntaxVisitor {
 
         for (from, to) in dependencies {
             // Only include dependencies between known classes
-            if classes.keys.contains(from) && classes.keys.contains(to) {
+            if stateHandler.classesResult.keys.contains(from) && stateHandler.classesResult.keys.contains(to) {
                 adjacencyList[from, default: []].append(to)
             }
         }
 
-        return DependencyGraph(nodes: Set(classes.keys), adjacencyList: adjacencyList)
+        return DependencyGraph(nodes: Set(stateHandler.classesResult.keys), adjacencyList: adjacencyList)
     }
 }
 
 private class MethodDependencyVisitor: SyntaxVisitor {
     let containingClass: String
-    var dependencies: [(from: String, to: String)] = []
+    private let stateHandler: DependencyGraphStateHandler
+    var dependencies: [(from: String, to: String)] { stateHandler.dependenciesResult }
     private var currentClassNames: Set<String> = []
 
-    init(containingClass: String) {
+    init(containingClass: String, stateHandler: DependencyGraphStateHandler) {
         self.containingClass = containingClass
+        self.stateHandler = stateHandler
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -266,7 +267,7 @@ private class MethodDependencyVisitor: SyntaxVisitor {
 
             // Check if this is a call on another class instance
             if let targetClass = MethodDependencyVisitor.inferClassFromVariable(baseName, classNames: currentClassNames) {
-                dependencies.append((from: containingClass, to: targetClass))
+                stateHandler.recordDependency(from: containingClass, to: targetClass)
             }
         }
 
@@ -281,7 +282,7 @@ private class MethodDependencyVisitor: SyntaxVisitor {
 
             // Check if this is access to another class's attribute
             if let targetClass = MethodDependencyVisitor.inferClassFromVariable(baseName, classNames: currentClassNames) {
-                dependencies.append((from: containingClass, to: targetClass))
+                stateHandler.recordDependency(from: containingClass, to: targetClass)
             }
         }
 

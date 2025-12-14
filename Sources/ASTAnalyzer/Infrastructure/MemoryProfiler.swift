@@ -10,13 +10,18 @@ import Foundation
 /// Memory profiling utility for detecting potential memory leaks
 public final class MemoryProfiler {
 
-    private var memorySnapshots: [MemorySnapshot] = []
+    private let memoryInfoProvider: MemoryInfoProvider
+    private let snapshotStateHandler: MemorySnapshotStateHandler
     private let startTime = Date()
     private let snapshotOutputHandler: SnapshotOutputHandler
     private let reportFormatter: MemoryReportFormatter
 
-    public init(snapshotOutputHandler: SnapshotOutputHandler = ConsoleSnapshotOutputHandler(),
+    public init(memoryInfoProvider: MemoryInfoProvider = DefaultMemoryInfoProvider(),
+                snapshotStateHandler: MemorySnapshotStateHandler = DefaultMemorySnapshotStateHandler(),
+                snapshotOutputHandler: SnapshotOutputHandler = ConsoleSnapshotOutputHandler(),
                 reportFormatter: MemoryReportFormatter = ConsoleMemoryReportFormatter()) {
+        self.memoryInfoProvider = memoryInfoProvider
+        self.snapshotStateHandler = snapshotStateHandler
         self.snapshotOutputHandler = snapshotOutputHandler
         self.reportFormatter = reportFormatter
     }
@@ -52,57 +57,35 @@ public final class MemoryProfiler {
 
     /// Takes a memory snapshot
     public func takeSnapshot(label: String = "") {
-        let stats = getMemoryStats()
+        let stats = memoryInfoProvider.getMemoryStatistics()
         let snapshot = MemorySnapshot(
             timestamp: Date(),
             residentSize: stats.residentSize,
             virtualSize: stats.virtualSize,
             startTime: startTime
         )
-        memorySnapshots.append(snapshot)
+        snapshotStateHandler.addSnapshot(snapshot)
 
         snapshotOutputHandler.outputSnapshot(snapshot: snapshot, label: label)
     }
 
     /// Gets current memory statistics
     public func getMemoryStats() -> MemoryStats {
-        var info = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-
-        let result = withUnsafeMutablePointer(to: &info) { infoPtr in
-            infoPtr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { intPtr in
-                task_info(mach_task_self_,
-                         task_flavor_t(MACH_TASK_BASIC_INFO),
-                         intPtr,
-                         &count)
-            }
-        }
-
-        if result == KERN_SUCCESS {
-            let currentPeakSize = memorySnapshots.map { $0.residentSize }.max() ?? info.resident_size
-            return MemoryStats(
-                residentSize: UInt64(info.resident_size),
-                virtualSize: UInt64(info.virtual_size),
-                peakResidentSize: currentPeakSize
-            )
-        } else {
-            // Fallback: use a basic estimation
-            // Note: This is a simplified fallback when task_info fails
-            let estimatedSize = UInt64(50 * 1024 * 1024) // 50 MB estimate
-            let fallbackPeakSize = memorySnapshots.map { $0.residentSize }.max() ?? estimatedSize
-            return MemoryStats(
-                residentSize: estimatedSize,
-                virtualSize: estimatedSize,
-                peakResidentSize: fallbackPeakSize
-            )
-        }
+        let stats = memoryInfoProvider.getMemoryStatistics()
+        let currentPeakSize = snapshotStateHandler.getSnapshots().map { $0.residentSize }.max() ?? stats.residentSize
+        return MemoryStats(
+            residentSize: stats.residentSize,
+            virtualSize: stats.virtualSize,
+            peakResidentSize: currentPeakSize
+        )
     }
 
     /// Analyzes memory usage patterns and detects potential leaks
     public func analyzeMemoryUsage() -> MemoryAnalysis {
-        guard memorySnapshots.count >= 2 else {
+        let snapshots = snapshotStateHandler.getSnapshots()
+        guard snapshots.count >= 2 else {
             return MemoryAnalysis(
-                totalSnapshots: memorySnapshots.count,
+                totalSnapshots: snapshots.count,
                 memoryGrowth: 0,
                 averageGrowthRate: 0,
                 potentialLeakDetected: false,
@@ -110,8 +93,8 @@ public final class MemoryProfiler {
             )
         }
 
-        let firstSnapshot = memorySnapshots.first!
-        let lastSnapshot = memorySnapshots.last!
+        let firstSnapshot = snapshots.first!
+        let lastSnapshot = snapshots.last!
 
         let memoryGrowth = Int64(lastSnapshot.residentSize) - Int64(firstSnapshot.residentSize)
         let timeSpan = lastSnapshot.timestamp.timeIntervalSince(firstSnapshot.timestamp)
@@ -131,7 +114,7 @@ public final class MemoryProfiler {
             recommendations.append("   Growth: \(String(format: "%.2f", Double(memoryGrowth) / 1024.0 / 1024.0)) MB")
             recommendations.append("   Rate: \(String(format: "%.2f", averageGrowthRate / 1024.0 / 1024.0)) MB/s")
 
-            let enumeratedSnapshots = memorySnapshots.enumerated()
+            let enumeratedSnapshots = snapshots.enumerated()
             let peakSnapshot = enumeratedSnapshots.max(by: { $0.element.residentSize < $1.element.residentSize })
             if let peakIndex = peakSnapshot?.offset {
                 recommendations.append("   Peak at snapshot \(peakIndex + 1)")
@@ -141,7 +124,7 @@ public final class MemoryProfiler {
         }
 
         return MemoryAnalysis(
-            totalSnapshots: memorySnapshots.count,
+            totalSnapshots: snapshots.count,
             memoryGrowth: memoryGrowth,
             averageGrowthRate: averageGrowthRate,
             potentialLeakDetected: potentialLeakDetected,
@@ -153,12 +136,12 @@ public final class MemoryProfiler {
     public func outputMemoryReport() {
         let stats = getMemoryStats()
         let analysis = analyzeMemoryUsage()
-        reportFormatter.outputMemoryReport(stats: stats, snapshots: memorySnapshots, analysis: analysis)
+        reportFormatter.outputMemoryReport(stats: stats, snapshots: snapshotStateHandler.getSnapshots(), analysis: analysis)
     }
 
     /// Resets profiling data
     public func reset() {
-        memorySnapshots.removeAll()
+        snapshotStateHandler.clearSnapshots()
     }
 }
 

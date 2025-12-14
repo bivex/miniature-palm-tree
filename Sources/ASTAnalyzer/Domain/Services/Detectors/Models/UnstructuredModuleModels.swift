@@ -9,7 +9,7 @@
 import Foundation
 
 /// Analysis result for file structure
-struct StructureAnalysis {
+public struct StructureAnalysis {
     var hasClasses = false
     var hasStructs = false
     var hasEnums = false

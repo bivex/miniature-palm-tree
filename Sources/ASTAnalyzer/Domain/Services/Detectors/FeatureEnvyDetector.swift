@@ -47,7 +47,7 @@ public final class FeatureEnvyDetector: BaseDefectDetector {
     }
 
     /// Analyzes a method's attribute access patterns
-    private func analyzeMethodAccess(_ method: MethodInfo, allClasses: [ClassInfo]) -> AccessAnalysis {
+    private func analyzeMethodAccess(_ method: VisitorMethodInfo, allClasses: [ClassInfo]) -> AccessAnalysis {
         guard let body = method.node.body else {
             return AccessAnalysis(localAccess: 0, foreignAccess: [:], hasFeatureEnvy: false, enviedClass: nil)
         }
@@ -75,16 +75,6 @@ public final class FeatureEnvyDetector: BaseDefectDetector {
 
 // MARK: - Private Structures
 
-private struct MethodInfo {
-    let className: String
-    let name: String
-    let node: FunctionDeclSyntax
-}
-
-private struct ClassInfo {
-    let name: String
-    let attributes: [String]
-}
 
 private struct AccessAnalysis {
     let localAccess: Int
@@ -102,7 +92,7 @@ private struct AccessAnalysis {
     }
 
     /// Creates an architectural defect if feature envy is detected
-    func createDefect(for method: MethodInfo, filePath: String) -> ArchitecturalDefect? {
+    func createDefect(for method: VisitorMethodInfo, filePath: String) -> ArchitecturalDefect? {
         guard hasFeatureEnvy else { return nil }
 
         let enviedClassName = enviedClass ?? "unknown"
@@ -119,10 +109,13 @@ private struct AccessAnalysis {
 // MARK: - Private Visitors
 
 private class FeatureEnvyVisitor: SyntaxVisitor {
-    var methods: [MethodInfo] = []
-    var classes: [ClassInfo] = []
+    private let stateHandler: FeatureEnvyStateHandler
 
-    init() {
+    var methods: [VisitorMethodInfo] { stateHandler.methodsResult }
+    var classes: [ClassInfo] { stateHandler.classesResult }
+
+    init(stateHandler: FeatureEnvyStateHandler = DefaultFeatureEnvyStateHandler()) {
+        self.stateHandler = stateHandler
         super.init(viewMode: .sourceAccurate)
     }
 
@@ -141,7 +134,7 @@ private class FeatureEnvyVisitor: SyntaxVisitor {
             }
         }
 
-        classes.append(ClassInfo(name: className, attributes: attributes))
+        stateHandler.recordClass(name: className, attributes: attributes)
 
         // Continue visiting to find methods
         return .visitChildren
@@ -162,7 +155,7 @@ private class FeatureEnvyVisitor: SyntaxVisitor {
             }
         }
 
-        classes.append(ClassInfo(name: className, attributes: attributes))
+        stateHandler.recordClass(name: className, attributes: attributes)
 
         // Continue visiting to find methods
         return .visitChildren
@@ -185,7 +178,7 @@ private class FeatureEnvyVisitor: SyntaxVisitor {
         }
 
         let methodName = node.name.text
-        methods.append(MethodInfo(className: className, name: methodName, node: node))
+        stateHandler.recordMethod(className: className, name: methodName, node: node)
 
         return .skipChildren
     }

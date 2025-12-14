@@ -11,39 +11,43 @@ import Foundation
 /// Console implementation of OutputFormatter that handles actual printing
 public final class ConsoleOutputFormatter: OutputFormatter {
 
-    public init() {}
+    private let outputHandler: ConsoleOutputHandler
+
+    public init(outputHandler: ConsoleOutputHandler = StandardConsoleOutputHandler()) {
+        self.outputHandler = outputHandler
+    }
 
     public func outputHeader(for result: AnalysisResult) {
-        print(result.headerDescription, terminator: "")
+        outputHandler.outputInline(result.headerDescription)
     }
 
     public func outputSummary(for result: AnalysisResult) {
-        print("📈 SUMMARY:")
-        print("-" * 30)
+        outputHandler.outputLine("📈 SUMMARY:")
+        outputHandler.outputLine(String(repeating: "-", count: 30))
 
         if result.hasIssues {
             let critical = result.criticalDefects.count
             let high = result.highPriorityDefects.count
             let total = result.totalDefects
 
-            print("🚨 Critical Issues: \(critical)")
-            print("⚠️  High Priority: \(high)")
-            print("📊 Total Defects: \(total)")
-            print("🎯 Maintainability Score: \(String(format: "%.1f", result.maintainabilityScore))/100")
+            outputHandler.outputLine("🚨 Critical Issues: \(critical)")
+            outputHandler.outputLine("⚠️  High Priority: \(high)")
+            outputHandler.outputLine("📊 Total Defects: \(total)")
+            outputHandler.outputLine("🎯 Maintainability Score: \(String(format: "%.1f", result.maintainabilityScore))/100")
 
             if result.requiresRefactoring {
-                print("🔴 STATUS: Requires immediate refactoring")
+                outputHandler.outputLine("🔴 STATUS: Requires immediate refactoring")
             } else if result.hasCriticalIssues {
-                print("🟡 STATUS: Needs attention")
+                outputHandler.outputLine("🟡 STATUS: Needs attention")
             } else {
-                print("🟢 STATUS: Good, but could be improved")
+                outputHandler.outputLine("🟢 STATUS: Good, but could be improved")
             }
         } else {
-            print("✅ No architectural issues detected")
-            print("🎯 Maintainability Score: 100.0/100")
-            print("🟢 STATUS: Excellent")
+            outputHandler.outputLine("✅ No architectural issues detected")
+            outputHandler.outputLine("🎯 Maintainability Score: 100.0/100")
+            outputHandler.outputLine("🟢 STATUS: Excellent")
         }
-        print()
+        outputHandler.outputEmptyLine()
     }
 
     public func outputDefects(for result: AnalysisResult) {
@@ -51,61 +55,61 @@ public final class ConsoleOutputFormatter: OutputFormatter {
 
         // Critical defects
         if let critical = defectsBySeverity[.critical], !critical.isEmpty {
-            print("🚨 CRITICAL ISSUES:")
-            print("-" * 40)
+            outputHandler.outputLine("🚨 CRITICAL ISSUES:")
+            outputHandler.outputLine(String(repeating: "-", count: 40))
             for defect in critical {
                 outputDefect(defect)
             }
-            print()
+            outputHandler.outputEmptyLine()
         }
 
         // High priority defects
         if let high = defectsBySeverity[.high], !high.isEmpty {
-            print("⚠️ HIGH PRIORITY:")
-            print("-" * 30)
+            outputHandler.outputLine("⚠️ HIGH PRIORITY:")
+            outputHandler.outputLine(String(repeating: "-", count: 30))
             for defect in high {
                 outputDefect(defect)
             }
-            print()
+            outputHandler.outputEmptyLine()
         }
 
         // Medium priority defects
         if let medium = defectsBySeverity[.medium], !medium.isEmpty {
-            print("📊 MEDIUM PRIORITY:")
-            print("-" * 30)
+            outputHandler.outputLine("📊 MEDIUM PRIORITY:")
+            outputHandler.outputLine(String(repeating: "-", count: 30))
             for defect in medium {
                 outputDefect(defect)
             }
-            print()
+            outputHandler.outputEmptyLine()
         }
 
         // Low priority defects
         if let low = defectsBySeverity[.low], !low.isEmpty {
-            print("ℹ️ LOW PRIORITY:")
-            print("-" * 25)
+            outputHandler.outputLine("ℹ️ LOW PRIORITY:")
+            outputHandler.outputLine(String(repeating: "-", count: 25))
             for defect in low {
                 outputDefect(defect)
             }
-            print()
+            outputHandler.outputEmptyLine()
         }
     }
 
     public func outputDefect(_ defect: ArchitecturalDefect) {
-        print("• \(defect.message)")
-        print("  💡 \(defect.suggestion)")
-        print()
+        outputHandler.outputLine("• \(defect.message)")
+        outputHandler.outputLine("  💡 \(defect.suggestion)")
+        outputHandler.outputEmptyLine()
     }
 
     public func outputSuccessMessage() {
-        print("🎉 Congratulations!")
-        print("Your code follows good architectural practices.")
-        print()
+        outputHandler.outputLine("🎉 Congratulations!")
+        outputHandler.outputLine("Your code follows good architectural practices.")
+        outputHandler.outputEmptyLine()
     }
 
     public func outputFooter(for result: AnalysisResult) {
-        print("=" * 60)
-        print("Analysis completed at \(formatDate(result.analyzedAt))")
-        print("Use this report to improve your code architecture!")
+        outputHandler.outputLine(String(repeating: "=", count: 60))
+        outputHandler.outputLine("Analysis completed at \(formatDate(result.analyzedAt))")
+        outputHandler.outputLine("Use this report to improve your code architecture!")
     }
 
     private func formatDate(_ date: Date) -> String {
