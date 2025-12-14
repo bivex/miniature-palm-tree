@@ -1,0 +1,139 @@
+//
+//  AnalysisResultPresenter.swift
+//  ASTAnalyzer
+//
+//  Created on 2025-01-14.
+//
+
+import Foundation
+
+/// Presenter responsible for formatting analysis results for console output
+public final class AnalysisResultPresenter {
+
+    public init() {}
+
+    /// Presents the analysis result in a formatted console output
+    /// - Parameter result: The analysis result to present
+    public func present(result: AnalysisResult) {
+        printHeader(for: result)
+        printSummary(for: result)
+
+        if result.hasIssues {
+            printDefects(for: result)
+        } else {
+            printSuccessMessage()
+        }
+
+        printFooter(for: result)
+    }
+
+    // MARK: - Private Methods
+
+    private func printHeader(for result: AnalysisResult) {
+        print(result.headerDescription, terminator: "")
+    }
+
+    private func printSummary(for result: AnalysisResult) {
+        print("📈 SUMMARY:")
+        print("-" * 30)
+
+        if result.hasIssues {
+            let critical = result.criticalDefects.count
+            let high = result.highPriorityDefects.count
+            let total = result.totalDefects
+
+            print("🚨 Critical Issues: \(critical)")
+            print("⚠️  High Priority: \(high)")
+            print("📊 Total Defects: \(total)")
+            print("🎯 Maintainability Score: \(String(format: "%.1f", result.maintainabilityScore))/100")
+
+            if result.requiresRefactoring {
+                print("🔴 STATUS: Requires immediate refactoring")
+            } else if result.hasCriticalIssues {
+                print("🟡 STATUS: Needs attention")
+            } else {
+                print("🟢 STATUS: Good, but could be improved")
+            }
+        } else {
+            print("✅ No architectural issues detected")
+            print("🎯 Maintainability Score: 100.0/100")
+            print("🟢 STATUS: Excellent")
+        }
+        print()
+    }
+
+    private func printDefects(for result: AnalysisResult) {
+        let defectsBySeverity = result.defectsBySeverity
+
+        // Critical defects
+        if let critical = defectsBySeverity[.critical], !critical.isEmpty {
+            print("🚨 CRITICAL ISSUES:")
+            print("-" * 40)
+            for defect in critical {
+                printDefect(defect)
+            }
+            print()
+        }
+
+        // High priority defects
+        if let high = defectsBySeverity[.high], !high.isEmpty {
+            print("⚠️ HIGH PRIORITY:")
+            print("-" * 30)
+            for defect in high {
+                printDefect(defect)
+            }
+            print()
+        }
+
+        // Medium priority defects
+        if let medium = defectsBySeverity[.medium], !medium.isEmpty {
+            print("📊 MEDIUM PRIORITY:")
+            print("-" * 30)
+            for defect in medium {
+                printDefect(defect)
+            }
+            print()
+        }
+
+        // Low priority defects
+        if let low = defectsBySeverity[.low], !low.isEmpty {
+            print("ℹ️ LOW PRIORITY:")
+            print("-" * 25)
+            for defect in low {
+                printDefect(defect)
+            }
+            print()
+        }
+    }
+
+    private func printDefect(_ defect: ArchitecturalDefect) {
+        print("• \(defect.message)")
+        print("  💡 \(defect.suggestion)")
+        print()
+    }
+
+    private func printSuccessMessage() {
+        print("🎉 Congratulations!")
+        print("Your code follows good architectural practices.")
+        print()
+    }
+
+    private func printFooter(for result: AnalysisResult) {
+        print("=" * 60)
+        print("Analysis completed at \(formatDate(result.analyzedAt))")
+        print("Use this report to improve your code architecture!")
+    }
+
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
+    }
+}
+
+private extension String {
+    static func *(lhs: String, rhs: Int) -> String {
+        String(repeating: lhs, count: rhs)
+    }
+}

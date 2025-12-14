@@ -1,0 +1,24 @@
+class_smells:
+  god_class_wmc: 100
+  god_class_tcc: 0.1
+  god_class_atfd: 10
+  god_class_loc: 1000
+  mfa_lcom: 1.0
+  mfa_wmc: 50
+  mfa_nof: 15
+  mfa_nom: 25
+  deficient_encapsulation_woa: 0.5
+  lazy_class_nom: 0
+  lazy_class_nof: 0
+  lazy_class_dit: 0
+
+method_smells:
+  long_method_loc: 100
+  long_method_cc: 20
+  long_method_noi: 100
+
+structural_smells:
+  message_chain_length: 10
+  broken_hierarchy_dit: 10
+  cyclic_dependency_length: 5
+  feature_envy_threshold: 4
