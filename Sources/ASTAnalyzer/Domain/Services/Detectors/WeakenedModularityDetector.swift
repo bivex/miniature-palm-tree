@@ -24,23 +24,28 @@ public final class WeakenedModularityDetector: BaseDefectDetector {
     public override func detectDefects(in sourceFile: SourceFileSyntax, filePath: String) -> [ArchitecturalDefect] {
         var defects: [ArchitecturalDefect] = []
 
+        // First pass: collect all types and their members
         let modularityAnalyzer = ModularityAnalyzer()
         modularityAnalyzer.walk(sourceFile)
+        var analysis = modularityAnalyzer.analysis
 
-        let analysis = modularityAnalyzer.analysis
+        // Second pass: analyze dependencies by walking again
+        let dependencyAnalyzer = DependencyAnalyzer(knownTypes: Set(analysis.types.keys))
+        dependencyAnalyzer.walk(sourceFile)
+
+        // Update analysis with dependencies
+        for (typeName, deps) in dependencyAnalyzer.dependencies {
+            analysis.types[typeName]!.dependencies = deps
+        }
 
         // Calculate cohesion and coupling metrics
         let cohesion = calculateCohesion(analysis)
         let coupling = calculateCoupling(analysis)
 
-        print("DEBUG WeakenedModularityDetector: cohesion=\(cohesion), coupling=\(coupling)")
-
         if coupling > 0 { // Avoid division by zero
             let modularityRatio = cohesion / coupling
-            print("DEBUG WeakenedModularityDetector: modularityRatio=\(modularityRatio), threshold=\(modularityRatioThreshold)")
 
             if modularityRatio < modularityRatioThreshold {
-                print("DEBUG WeakenedModularityDetector: creating defect")
                 let defect = ArchitecturalDefect(
                     type: .weakenedModularity,
                     severity: .medium,
@@ -49,11 +54,7 @@ public final class WeakenedModularityDetector: BaseDefectDetector {
                     suggestion: "Improve cohesion by grouping related functionality or reduce coupling by introducing abstractions"
                 )
                 defects.append(defect)
-            } else {
-                print("DEBUG WeakenedModularityDetector: ratio above threshold")
             }
-        } else {
-            print("DEBUG WeakenedModularityDetector: coupling is 0, skipping")
         }
 
         return defects
@@ -130,9 +131,42 @@ private struct ModularityAnalysis {
 
 // MARK: - Private Visitors
 
+private class DependencyAnalyzer: SyntaxVisitor {
+    let knownTypes: Set<String>
+    var dependencies: [String: Set<String>] = [:]
+    var currentTypeContext: String?
+
+    init(knownTypes: Set<String>) {
+        self.knownTypes = knownTypes
+        super.init(viewMode: .sourceAccurate)
+    }
+
+    override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+        let typeName = node.name.text
+        dependencies[typeName] = []
+        currentTypeContext = typeName
+
+        // Analyze property types for dependencies
+        for member in node.memberBlock.members {
+            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
+                for binding in varDecl.bindings {
+                    if let typeAnnotation = binding.typeAnnotation {
+                        let typeNameStr = typeAnnotation.type.description.trimmingCharacters(in: .whitespaces)
+                        if knownTypes.contains(typeNameStr) && typeNameStr != typeName {
+                            dependencies[typeName]!.insert(typeNameStr)
+                        }
+                    }
+                }
+            }
+        }
+
+        defer { currentTypeContext = nil }
+        return .visitChildren
+    }
+}
+
 private class ModularityAnalyzer: SyntaxVisitor {
     var analysis = ModularityAnalysis()
-    var currentTypeContext: String?
 
     init() {
         super.init(viewMode: .sourceAccurate)
@@ -141,82 +175,22 @@ private class ModularityAnalyzer: SyntaxVisitor {
     override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
         let typeName = node.name.text
         analysis.types[typeName] = TypeInfo()
-        currentTypeContext = typeName
-        defer { currentTypeContext = nil }
-        return .visitChildren
-    }
 
-    override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-        let typeName = node.name.text
-        analysis.types[typeName] = TypeInfo()
-        currentTypeContext = typeName
-        defer { currentTypeContext = nil }
-        return .visitChildren
-    }
-
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        let typeName = node.name.text
-        analysis.types[typeName] = TypeInfo()
-        currentTypeContext = typeName
-        defer { currentTypeContext = nil }
-        return .visitChildren
-    }
-
-    override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-        let typeName = node.name.text
-        analysis.types[typeName] = TypeInfo()
-        currentTypeContext = typeName
-        defer { currentTypeContext = nil }
-        return .visitChildren
-    }
-
-    override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
-        let typeName = node.name.text
-        analysis.types[typeName] = TypeInfo()
-        currentTypeContext = typeName
-        defer { currentTypeContext = nil }
-        return .visitChildren
-    }
-
-    override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-        if let currentType = currentTypeContext {
-            analysis.types[currentType]!.methods.append(node.name.text)
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        if let currentType = currentTypeContext {
-            for binding in node.bindings {
-                if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
-                    analysis.types[currentType]!.properties.append(identifier.identifier.text)
+        // Analyze members directly
+        for member in node.memberBlock.members {
+            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
+                for binding in varDecl.bindings {
+                    if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
+                        analysis.types[typeName]!.properties.append(identifier.identifier.text)
+                    }
                 }
+            } else if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
+                analysis.types[typeName]!.methods.append(funcDecl.name.text)
+            } else if member.decl.is(InitializerDeclSyntax.self) {
+                analysis.types[typeName]!.methods.append("init")
             }
         }
-        return .visitChildren
-    }
 
-    override func visit(_ node: DeclReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-        if let currentType = currentTypeContext {
-            let referencedName = node.baseName.text
-            // If it's referencing another type in our analysis, count it as a dependency
-            if analysis.types[referencedName] != nil && referencedName != currentType {
-                analysis.types[currentType]!.dependencies.insert(referencedName)
-            }
-        }
-        return .visitChildren
-    }
-
-    override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
-        if let currentType = currentTypeContext {
-            // Analyze member access to detect dependencies
-            if let base = node.base?.as(DeclReferenceExprSyntax.self) {
-                let baseName = base.baseName.text
-                if analysis.types[baseName] != nil && baseName != currentType {
-                    analysis.types[currentType]!.dependencies.insert(baseName)
-                }
-            }
-        }
         return .visitChildren
     }
 }
