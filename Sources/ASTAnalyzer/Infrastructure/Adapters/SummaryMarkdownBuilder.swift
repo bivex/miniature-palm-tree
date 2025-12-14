@@ -100,11 +100,12 @@ public final class SummaryMarkdownBuilder {
     }
 
     private func buildAnalysisMetadataSection(_ report: SmellReport) -> String {
+        let timestamp = report.metadata.timestamp
         """
 
 ## 📋 Analysis Metadata
 
-- **Timestamp**: \(report.metadata.timestamp.formatted(date: .complete, time: .complete))
+- **Timestamp**: \(timestamp.formatted(date: .complete, time: .complete))
 - **Version**: \(report.metadata.version)
 - **Thresholds Used**:
   - God Class LOC: \(report.metadata.thresholds.classSmells.godClassLOC)

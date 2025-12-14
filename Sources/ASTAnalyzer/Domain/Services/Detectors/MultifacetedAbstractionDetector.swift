@@ -212,9 +212,10 @@ private class MultifacetedClassAnalyzer {
             }
 
             if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
+                let methodDescription = funcDecl.description
                 let method = Method(
                     name: funcDecl.name.text,
-                    loc: funcDecl.description.components(separatedBy: "\n").count,
+                    loc: methodDescription.components(separatedBy: "\n").count,
                     cyclomaticComplexity: 1, // Simplified
                     accessedAttributes: []    // Simplified
                 )
@@ -227,7 +228,8 @@ private class MultifacetedClassAnalyzer {
             name: classDecl.name.text,
             methods: methods,
             attributes: attributes,
-            loc: classDecl.description.components(separatedBy: "\n").count
+            let classDescription = classDecl.description
+            loc: classDescription.components(separatedBy: "\n").count
         )
 
         // Calculate metrics using Z notation calculators
@@ -285,9 +287,10 @@ private class MultifacetedStructAnalyzer {
             }
 
             if let funcDecl = member.decl.as(FunctionDeclSyntax.self) {
+                let methodDescription = funcDecl.description
                 let method = Method(
                     name: funcDecl.name.text,
-                    loc: funcDecl.description.components(separatedBy: "\n").count,
+                    loc: methodDescription.components(separatedBy: "\n").count,
                     cyclomaticComplexity: 1,
                     accessedAttributes: []
                 )
@@ -300,8 +303,8 @@ private class MultifacetedStructAnalyzer {
             name: structDecl.name.text,
             methods: methods,
             attributes: attributes,
-            loc: structDecl.description.components(separatedBy: "\n").count
-        )
+            let structDescription = structDecl.description
+            loc: structDescription.components(separatedBy: "\n").count
 
         // Calculate metrics using Z notation calculators
         let lcom5 = LCOM_Calculator.calculateLCOM5(for: tempClass)

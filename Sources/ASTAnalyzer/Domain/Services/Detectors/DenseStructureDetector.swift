@@ -102,7 +102,8 @@ private class DependencyAnalyzer: SyntaxVisitor {
         // Analyze inheritance dependencies
         if let inheritanceClause = node.inheritanceClause {
             for inheritedType in inheritanceClause.inheritedTypes {
-                let inheritedTypeName = inheritedType.type.description.trimmingCharacters(in: .whitespaces)
+                let inheritedTypeDescription = inheritedType.type.description
+                let inheritedTypeName = inheritedTypeDescription.trimmingCharacters(in: .whitespaces)
                 analysis.addDependency(from: typeName, to: inheritedTypeName)
             }
         }
@@ -147,7 +148,8 @@ private class DependencyAnalyzer: SyntaxVisitor {
         // Analyze protocol inheritance
         if let inheritanceClause = node.inheritanceClause {
             for inheritedType in inheritanceClause.inheritedTypes {
-                let inheritedTypeName = inheritedType.type.description.trimmingCharacters(in: .whitespaces)
+                let inheritedTypeDescription = inheritedType.type.description
+                let inheritedTypeName = inheritedTypeDescription.trimmingCharacters(in: .whitespaces)
                 analysis.addDependency(from: typeName, to: inheritedTypeName)
             }
         }
@@ -187,7 +189,8 @@ private class DependencyAnalyzer: SyntaxVisitor {
 
     private func extractTypeName(from type: TypeSyntax) -> String {
         // Simple type name extraction - this could be improved
-        let typeDescription = type.description.trimmingCharacters(in: .whitespaces)
+        let typeDescription = type.description
+        let trimmedTypeDescription = typeDescription.trimmingCharacters(in: .whitespaces)
 
         // Remove generic parameters for simplicity
         if let bracketIndex = typeDescription.firstIndex(of: "<") {

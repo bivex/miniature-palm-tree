@@ -180,7 +180,8 @@ private struct MethodInfo {
 private class MethodAnalyzer {
     static func analyze(_ funcDecl: FunctionDeclSyntax) -> MethodInfo {
         // Calculate LOC
-        let loc = funcDecl.description.components(separatedBy: "\n").count
+        let description = funcDecl.description
+        let loc = description.components(separatedBy: "\n").count
 
         // Calculate cyclomatic complexity (simplified)
         let complexity = calculateCyclomaticComplexity(funcDecl)
@@ -207,7 +208,8 @@ private class MethodAnalyzer {
 
 private class InitializerAnalyzer {
     static func analyze(_ initDecl: InitializerDeclSyntax) -> MethodInfo {
-        let loc = initDecl.description.components(separatedBy: "\n").count
+        let description = initDecl.description
+        let loc = description.components(separatedBy: "\n").count
 
         let complexity = calculateCyclomaticComplexity(initDecl)
 

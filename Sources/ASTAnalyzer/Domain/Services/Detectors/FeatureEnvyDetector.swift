@@ -270,10 +270,10 @@ private class AttributeAccessVisitor: SyntaxVisitor {
         // First check if we have a declared type for this variable
         if let declaredType = variableDeclarations[variableName] {
             // Extract the base type name (remove generics, optionals, etc.)
-            let baseType = declaredType
-                .replacingOccurrences(of: "?", with: "")
+            let cleanedType = declaredType.replacingOccurrences(of: "?", with: "")
                 .replacingOccurrences(of: "!", with: "")
-                .components(separatedBy: CharacterSet(charactersIn: "<[")).first ?? declaredType
+            let components = cleanedType.components(separatedBy: CharacterSet(charactersIn: "<["))
+            let baseType = components.first ?? declaredType
             return baseType.trimmingCharacters(in: .whitespaces)
         }
 
