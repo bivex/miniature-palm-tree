@@ -37,6 +37,8 @@ public struct ClassSmellThresholds: Sendable, Codable {
     public let lazyClassNOM: Int
     public let lazyClassNOF: Int
     public let lazyClassDIT: Int
+    public let massiveVCNOM: Int
+    public let massiveVCNOA: Int
 
     private enum CodingKeys: String, CodingKey {
         case godClassWMC = "god_class_wmc"
@@ -51,6 +53,8 @@ public struct ClassSmellThresholds: Sendable, Codable {
         case lazyClassNOM = "lazy_class_nom"
         case lazyClassNOF = "lazy_class_nof"
         case lazyClassDIT = "lazy_class_dit"
+        case massiveVCNOM = "massive_vc_nom"
+        case massiveVCNOA = "massive_vc_noa"
     }
 
     public init(
@@ -65,7 +69,9 @@ public struct ClassSmellThresholds: Sendable, Codable {
         deficientEncapsulationWOA: Double = 0.3,
         lazyClassNOM: Int = 5,
         lazyClassNOF: Int = 5,
-        lazyClassDIT: Int = 2
+        lazyClassDIT: Int = 2,
+        massiveVCNOM: Int = 20,
+        massiveVCNOA: Int = 15
     ) {
         self.godClassWMC = godClassWMC
         self.godClassTCC = godClassTCC
@@ -79,6 +85,8 @@ public struct ClassSmellThresholds: Sendable, Codable {
         self.lazyClassNOM = lazyClassNOM
         self.lazyClassNOF = lazyClassNOF
         self.lazyClassDIT = lazyClassDIT
+        self.massiveVCNOM = massiveVCNOM
+        self.massiveVCNOA = massiveVCNOA
     }
 
     /// Check if class metrics indicate various code smells
@@ -176,7 +184,9 @@ public struct Thresholds: Sendable {
             deficientEncapsulationWOA: 0.3,
             lazyClassNOM: 5,
             lazyClassNOF: 5,
-            lazyClassDIT: 2
+            lazyClassDIT: 2,
+            massiveVCNOM: 20,
+            massiveVCNOA: 15
         ),
         methodSmells: MethodSmellThresholds(
             longMethodLOC: 50,
@@ -205,7 +215,9 @@ public struct Thresholds: Sendable {
             deficientEncapsulationWOA: 0.4,
             lazyClassNOM: 3,
             lazyClassNOF: 3,
-            lazyClassDIT: 1
+            lazyClassDIT: 1,
+            massiveVCNOM: 25,
+            massiveVCNOA: 20
         ),
         methodSmells: MethodSmellThresholds(
             longMethodLOC: 75,
@@ -234,7 +246,9 @@ public struct Thresholds: Sendable {
             deficientEncapsulationWOA: 0.2,
             lazyClassNOM: 7,
             lazyClassNOF: 7,
-            lazyClassDIT: 3
+            lazyClassDIT: 3,
+            massiveVCNOM: 15,
+            massiveVCNOA: 12
         ),
         methodSmells: MethodSmellThresholds(
             longMethodLOC: 40,

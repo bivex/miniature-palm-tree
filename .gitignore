@@ -1,0 +1,79 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.pins
+Package.resolved
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+*.xcbkptlist
+*.moved-aside
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Test outputs and artifacts
+test_output/
+test_results/
+*.profraw
+*.profdata
+
+# SwiftLint
+.swiftlint.yml.bak
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/
+
+# SwiftFormat
+.swiftformat
+
+# Danger
+danger/
+
+# SwiftGen
+*.generated.swift
+
+# Realm
+*.realm
+
+# Firebase
+GoogleService-Info.plist
+google-services.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Personal configs
+*.xcconfig.personal

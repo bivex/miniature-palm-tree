@@ -35,6 +35,7 @@ public final class ProjectSmellAnalyzer {
         // Initialize all available detectors
         self.detectors = [
             GodClassDetector(thresholds: thresholds),
+            MassiveViewControllerDetector(thresholds: thresholds),
             LongMethodDetector(thresholds: thresholds),
             LazyClassDetector(thresholds: thresholds),
             DataClassDetector(thresholds: thresholds),
