@@ -219,59 +219,67 @@ public final class ProjectSmellAnalyzer {
         var result = [SmellInstance]()
 
         for defect in defects {
-            // Create a unique key for this defect
-            let key = "\(defect.type.rawValue)|\(defect.location.filePath)|\(defect.location.context ?? "")|\(defect.message)|\(defect.location.lineNumber ?? 0)|\(defect.location.columnNumber ?? 0)"
-            if seen.contains(key) {
-                print("WARNING: Duplicate defect detected and filtered: \(key)")
-                continue
-            }
-            seen.insert(key)
+            guard !isDuplicateDefect(defect, seen: &seen) else { continue }
 
-            // Determine the code element
-            let element: CodeElement
-            if let context = defect.location.context {
-                if context.hasPrefix("class ") {
-                    let className = String(context.dropFirst(6)) // Remove "class " prefix
-                    element = .class(name: className)
-                } else if context.hasPrefix("struct ") {
-                    let structName = String(context.dropFirst(7)) // Remove "struct " prefix
-                    element = .class(name: structName)
-                } else if context.contains(".") {
-                    // Method context like "ClassName.methodName"
-                    let components = context.split(separator: ".", maxSplits: 1)
-                    if components.count == 2 {
-                        element = .method(className: String(components[0]), methodName: String(components[1]))
-                    } else {
-                        element = .file(path: defect.location.filePath)
-                    }
-                } else {
-                    element = .file(path: defect.location.filePath)
-                }
-            } else {
-                element = .file(path: defect.location.filePath)
-            }
-
-            // Convert severity to double
-            let severityDouble: Double
-            switch defect.severity {
-            case .low: severityDouble = 0.2
-            case .medium: severityDouble = 0.5
-            case .high: severityDouble = 0.7
-            case .critical: severityDouble = 0.9
-            }
-
-            let smellInstance = SmellInstance(
-                type: defect.type,
-                element: element,
-                severity: severityDouble,
-                location: defect.location,
-                message: defect.message,
-                suggestion: defect.suggestion
-            )
+            let element = determineCodeElement(for: defect)
+            let severityDouble = convertSeverityToDouble(defect.severity)
+            let smellInstance = createSmellInstance(from: defect, element: element, severity: severityDouble)
             result.append(smellInstance)
         }
 
         return result
+    }
+
+    private func isDuplicateDefect(_ defect: ArchitecturalDefect, seen: inout Set<String>) -> Bool {
+        let key = "\(defect.type.rawValue)|\(defect.location.filePath)|\(defect.location.context ?? "")|\(defect.message)|\(defect.location.lineNumber ?? 0)|\(defect.location.columnNumber ?? 0)"
+        if seen.contains(key) {
+            print("WARNING: Duplicate defect detected and filtered: \(key)")
+            return true
+        }
+        seen.insert(key)
+        return false
+    }
+
+    private func determineCodeElement(for defect: ArchitecturalDefect) -> CodeElement {
+        guard let context = defect.location.context else {
+            return .file(path: defect.location.filePath)
+        }
+
+        if context.hasPrefix("class ") {
+            let className = String(context.dropFirst(6)) // Remove "class " prefix
+            return .class(name: className)
+        } else if context.hasPrefix("struct ") {
+            let structName = String(context.dropFirst(7)) // Remove "struct " prefix
+            return .class(name: structName)
+        } else if context.contains(".") {
+            // Method context like "ClassName.methodName"
+            let components = context.split(separator: ".", maxSplits: 1)
+            if components.count == 2 {
+                return .method(className: String(components[0]), methodName: String(components[1]))
+            }
+        }
+
+        return .file(path: defect.location.filePath)
+    }
+
+    private func convertSeverityToDouble(_ severity: Severity) -> Double {
+        switch severity {
+        case .low: return 0.2
+        case .medium: return 0.5
+        case .high: return 0.7
+        case .critical: return 0.9
+        }
+    }
+
+    private func createSmellInstance(from defect: ArchitecturalDefect, element: CodeElement, severity: Double) -> SmellInstance {
+        SmellInstance(
+            type: defect.type,
+            element: element,
+            severity: severity,
+            location: defect.location,
+            message: defect.message,
+            suggestion: defect.suggestion
+        )
     }
 }
 

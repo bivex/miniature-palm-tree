@@ -138,65 +138,79 @@ private class DeficientEncapsulationClassAnalyzer {
     }
 
     private func extractMetrics() -> (woa: Double, exposedFieldsCount: Int, hasMutableProperties: Bool) {
+        let attributes = extractAttributes(from: classDecl)
+        let tempClass = createTempClass(from: classDecl, with: attributes)
+        let woa = calculateWOA(for: tempClass)
+        let exposedFieldsCount = countExposedFields(in: attributes)
+
+        // Classes can always have mutable properties, so this is always true for classes
+        return (woa: woa, exposedFieldsCount: exposedFieldsCount, hasMutableProperties: true)
+    }
+
+    private func extractAttributes(from classDecl: ClassDeclSyntax) -> Set<Attribute> {
         var attributes = Set<Attribute>()
 
-        // Extract attributes
         for member in classDecl.memberBlock.members {
-            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
-                for binding in varDecl.bindings {
-                    if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
-                        // Determine access level
-                        let accessLevel: AccessLevel
-                        if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) {
-                            accessLevel = .public
-                        } else if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.open) }) {
-                            accessLevel = .open
-                        } else {
-                            accessLevel = .internal
-                        }
+            guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
 
-                        // Determine if computed
-                        let isComputed = varDecl.bindings.first?.initializer == nil
+            for binding in varDecl.bindings {
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
 
-                        // Determine getter/setter availability
-                        let hasGetter = !isComputed || accessLevel != .private
-                        let hasSetter = !isComputed && !varDecl.modifiers.contains(where: {
-                            $0.name.tokenKind == .keyword(.let)
-                        })
+                let accessLevel = determineAccessLevel(for: varDecl)
+                let isComputed = varDecl.bindings.first?.initializer == nil
+                let (hasGetter, hasSetter) = determineGetterSetterAvailability(for: varDecl, isComputed: isComputed)
 
-                        let attribute = Attribute(
-                            name: identifier.identifier.text,
-                            type: Type(name: "Any"),
-                            accessLevel: accessLevel,
-                            isComputed: isComputed,
-                            hasGetter: hasGetter,
-                            hasSetter: hasSetter
-                        )
-                        attributes.insert(attribute)
-                    }
-                }
+                let attribute = Attribute(
+                    name: identifier.identifier.text,
+                    type: Type(name: "Any"),
+                    accessLevel: accessLevel,
+                    isComputed: isComputed,
+                    hasGetter: hasGetter,
+                    hasSetter: hasSetter
+                )
+                attributes.insert(attribute)
             }
         }
 
-        // Create a temporary class for WOA calculation
-        let tempClass = Class(
+        return attributes
+    }
+
+    private func determineAccessLevel(for varDecl: VariableDeclSyntax) -> AccessLevel {
+        if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) {
+            return .public
+        } else if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.open) }) {
+            return .open
+        } else {
+            return .internal
+        }
+    }
+
+    private func determineGetterSetterAvailability(for varDecl: VariableDeclSyntax, isComputed: Bool) -> (hasGetter: Bool, hasSetter: Bool) {
+        let hasGetter = !isComputed || determineAccessLevel(for: varDecl) != .private
+        let hasSetter = !isComputed && !varDecl.modifiers.contains(where: {
+            $0.name.tokenKind == .keyword(.let)
+        })
+        return (hasGetter, hasSetter)
+    }
+
+    private func createTempClass(from classDecl: ClassDeclSyntax, with attributes: Set<Attribute>) -> Class {
+        Class(
             name: classDecl.name.text,
             attributes: attributes,
             loc: { let description = classDecl.description; return description.components(separatedBy: "\n").count }()
         )
+    }
 
-        // Calculate WOA using Z notation calculator
-        let woa = WOA_Calculator.calculate(for: tempClass)
+    private func calculateWOA(for tempClass: Class) -> Double {
+        WOA_Calculator.calculate(for: tempClass)
+    }
 
-        // Count exposed public fields
-        let exposedFieldsCount = attributes.filter { attr in
+    private func countExposedFields(in attributes: Set<Attribute>) -> Int {
+        attributes.filter { attr in
             [.public, .open].contains(attr.accessLevel) &&
             !attr.isComputed &&
             attr.hasSetter
         }.count
-
-        // Classes can always have mutable properties, so this is always true for classes
-        return (woa: woa, exposedFieldsCount: exposedFieldsCount, hasMutableProperties: true)
     }
 
     private func isBaseClassImplementingProtocol() -> Bool {
@@ -259,68 +273,81 @@ private class DeficientEncapsulationStructAnalyzer {
     }
 
     private func extractMetrics() -> (woa: Double, exposedFieldsCount: Int, hasMutableProperties: Bool) {
+        let attributes = extractAttributes(from: structDecl)
+        let hasMutableProperties = checkForMutableProperties(in: attributes)
+        let tempClass = createTempClass(from: structDecl, with: attributes)
+        let woa = calculateWOA(for: tempClass)
+        let exposedFieldsCount = countExposedFields(in: attributes)
+
+        return (woa: woa, exposedFieldsCount: exposedFieldsCount, hasMutableProperties: hasMutableProperties)
+    }
+
+    private func extractAttributes(from structDecl: StructDeclSyntax) -> Set<Attribute> {
         var attributes = Set<Attribute>()
-        var hasMutableProperties = false
 
-        // Extract attributes
         for member in structDecl.memberBlock.members {
-            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
-                // Check if this is a mutable stored property (not computed and not let)
-                let isLetDeclaration = varDecl.bindingSpecifier.tokenKind == .keyword(.let)
+            guard let varDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
+
+            for binding in varDecl.bindings {
+                guard let identifier = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
+
+                let accessLevel = determineAccessLevel(for: varDecl)
                 let isComputed = varDecl.bindings.first?.initializer == nil
+                let isLetDeclaration = varDecl.bindingSpecifier.tokenKind == .keyword(.let)
+                let (hasGetter, hasSetter) = determineGetterSetterAvailability(for: varDecl, isComputed: isComputed, isLetDeclaration: isLetDeclaration)
 
-                // Only consider it mutable if it's a stored var property (not let, not computed)
-                if !isLetDeclaration && !isComputed {
-                    hasMutableProperties = true
-                }
-
-                for binding in varDecl.bindings {
-                    if let identifier = binding.pattern.as(IdentifierPatternSyntax.self) {
-                        // Determine access level (structs are often more public by default)
-                        let accessLevel: AccessLevel
-                        if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) {
-                            accessLevel = .public
-                        } else if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.open) }) {
-                            accessLevel = .open
-                        } else {
-                            accessLevel = .internal
-                        }
-
-                        let isComputed = varDecl.bindings.first?.initializer == nil
-                        let hasGetter = !isComputed || accessLevel != .private
-                        let hasSetter = !isComputed && !isLetDeclaration
-
-                        let attribute = Attribute(
-                            name: identifier.identifier.text,
-                            type: Type(name: "Any"),
-                            accessLevel: accessLevel,
-                            isComputed: isComputed,
-                            hasGetter: hasGetter,
-                            hasSetter: hasSetter
-                        )
-                        attributes.insert(attribute)
-                    }
-                }
+                let attribute = Attribute(
+                    name: identifier.identifier.text,
+                    type: Type(name: "Any"),
+                    accessLevel: accessLevel,
+                    isComputed: isComputed,
+                    hasGetter: hasGetter,
+                    hasSetter: hasSetter
+                )
+                attributes.insert(attribute)
             }
         }
 
-        // Create a temporary class for WOA calculation
-        let tempClass = Class(
+        return attributes
+    }
+
+    private func checkForMutableProperties(in attributes: Set<Attribute>) -> Bool {
+        attributes.contains { !$0.isComputed && $0.hasSetter }
+    }
+
+    private func determineAccessLevel(for varDecl: VariableDeclSyntax) -> AccessLevel {
+        if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.public) }) {
+            return .public
+        } else if varDecl.modifiers.contains(where: { $0.name.tokenKind == .keyword(.open) }) {
+            return .open
+        } else {
+            return .internal
+        }
+    }
+
+    private func determineGetterSetterAvailability(for varDecl: VariableDeclSyntax, isComputed: Bool, isLetDeclaration: Bool) -> (hasGetter: Bool, hasSetter: Bool) {
+        let hasGetter = !isComputed || determineAccessLevel(for: varDecl) != .private
+        let hasSetter = !isComputed && !isLetDeclaration
+        return (hasGetter, hasSetter)
+    }
+
+    private func createTempClass(from structDecl: StructDeclSyntax, with attributes: Set<Attribute>) -> Class {
+        Class(
             name: structDecl.name.text,
             attributes: attributes,
             loc: { let description = structDecl.description; return description.components(separatedBy: "\n").count }()
         )
+    }
 
-        // Calculate WOA using Z notation calculator
-        let woa = WOA_Calculator.calculate(for: tempClass)
+    private func calculateWOA(for tempClass: Class) -> Double {
+        WOA_Calculator.calculate(for: tempClass)
+    }
 
-        // Count exposed public fields
-        let exposedFieldsCount = attributes.filter { attr in
+    private func countExposedFields(in attributes: Set<Attribute>) -> Int {
+        attributes.filter { attr in
             [.public, .open].contains(attr.accessLevel) &&
             !attr.isComputed &&
             attr.hasSetter
         }.count
-
-        return (woa: woa, exposedFieldsCount: exposedFieldsCount, hasMutableProperties: hasMutableProperties)
     }
 }

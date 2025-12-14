@@ -109,66 +109,52 @@ public final class InsufficientModularizationDetector: BaseDefectDetector {
 
     /// Calculates the maximum nesting depth in the source file
     private func calculateMaxNestingDepth(in sourceFile: SourceFileSyntax) -> Int {
-        class NestingDepthVisitor: SyntaxVisitor {
-            var currentDepth = 0
-            var maxDepth = 0
-
-            init() {
-                super.init(viewMode: .sourceAccurate)
-            }
-
-            override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: RepeatStmtSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: SwitchExprSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-
-            override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
-                currentDepth += 1
-                maxDepth = max(maxDepth, currentDepth)
-                defer { currentDepth -= 1 }
-                return .visitChildren
-            }
-        }
-
         let visitor = NestingDepthVisitor()
         visitor.walk(sourceFile)
         return visitor.maxDepth
+    }
+
+    private class NestingDepthVisitor: SyntaxVisitor {
+        var currentDepth = 0
+        var maxDepth = 0
+
+        init() {
+            super.init(viewMode: .sourceAccurate)
+        }
+
+        private func visitNestingConstruct(_ node: SyntaxProtocol) -> SyntaxVisitorContinueKind {
+            currentDepth += 1
+            maxDepth = max(maxDepth, currentDepth)
+            defer { currentDepth -= 1 }
+            return .visitChildren
+        }
+
+        override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: RepeatStmtSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: SwitchExprSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
+
+        override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
+            visitNestingConstruct(node)
+        }
     }
 }
