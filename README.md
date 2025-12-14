@@ -99,6 +99,7 @@ The codebase is meticulously organized into four distinct layers, each with clea
 | **Long Method** | Methods exceeding recommended line limits | 🟡 Medium |
 | **Lazy Class** | Classes with insufficient functionality | 🟢 Low |
 | **Data Class** | Classes containing only data, no behavior | 🟢 Low |
+| **Massive View Controller** | View Controllers that violate Single Responsibility Principle | 🔴 Critical |
 
 #### 📊 Comprehensive Code Quality Metrics
 
@@ -255,6 +256,7 @@ analysis-reports/
 └── analysis_2025-12-14_14-30-15/
     ├── God_Class.json
     ├── Long_Method.json
+    ├── Massive_View_Controller.json
     ├── Multifaceted_Abstraction.json
     └── summary.json
 ```
@@ -265,6 +267,7 @@ markdown-reports/
 └── analysis_2025-12-14_14-30-15/
     ├── God_Class.md
     ├── Long_Method.md
+    ├── Massive_View_Controller.md
     ├── Multifaceted_Abstraction.md
     └── README.md  # Summary report
 ```
@@ -440,6 +443,7 @@ register(AnalysisCoordinator.self) { container in
         GodClassDetector(),
         LazyClassDetector(),
         LongMethodDetector(),
+        MassiveViewControllerDetector(),
         CustomSmellDetector(),  // Your custom detector
         // ... other detectors
     ]
