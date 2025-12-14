@@ -1,0 +1,102 @@
+# ASTAnalyzer Thresholds Configuration Template
+#
+# This template provides default academic thresholds based on research from
+# Lanza & Marinescu, Habchi et al., and SwiftLint. Customize these values
+# based on your team's needs, codebase maturity, and development practices.
+#
+# Threshold Categories:
+# - class_smells: Issues with individual classes/structs
+# - method_smells: Issues with individual methods/functions
+# - structural_smells: Issues with relationships between components
+# - module_smells: Issues with file/module organization
+#
+# General Guidance:
+# - Lower values = stricter analysis (more defects detected)
+# - Higher values = more lenient analysis (fewer defects detected)
+# - Consider your team's velocity, codebase size, and quality goals
+
+class_smells:
+  # God Class Detection
+  # A class is considered a God Class if it exceeds these thresholds
+  god_class_wmc: 47          # Weighted Methods per Class - complexity measure
+  god_class_tcc: 0.33        # Tight Class Cohesion - how cohesive the class is (0.0-1.0)
+  god_class_atfd: 5          # Access To Foreign Data - external data dependencies
+  god_class_loc: 500         # Lines Of Code - raw size threshold
+
+  # Multifaceted Abstraction (MFA)
+  # Classes that do too many different things
+  mfa_lcom: 0.725           # Lack of Cohesion in Methods - cohesion measure
+  mfa_wmc: 34               # Alternative WMC threshold for MFA
+  mfa_nof: 8                # Number Of Fields
+  mfa_nom: 14               # Number Of Methods
+
+  # Deficient Encapsulation
+  # Classes that expose too much internal state
+  deficient_encapsulation_woa: 0.3  # Weight of Access - public interface ratio
+
+  # Lazy Class
+  # Classes that don't contribute enough value
+  lazy_class_nom: 5         # Number Of Methods threshold
+  lazy_class_nof: 5         # Number Of Fields threshold
+  lazy_class_dit: 2         # Depth In Tree (inheritance depth)
+
+  # Massive View Controller (iOS-specific)
+  # UIViewControllers that are too large
+  massive_vc_nom: 20        # Number Of Methods
+  massive_vc_noa: 15        # Number Of Attributes/Properties
+
+method_smells:
+  # Long Method Detection
+  # Methods/functions that are too long or complex
+  long_method_loc: 50       # Lines Of Code
+  long_method_cc: 10        # Cyclomatic Complexity
+  long_method_noi: 30       # Number Of Instructions (approximated)
+
+structural_smells:
+  # Message Chain
+  # Long chains of method calls (obj.a().b().c().d())
+  message_chain_length: 3   # Maximum chain length
+
+  # Broken Hierarchy
+  # Inheritance hierarchies that are too deep
+  broken_hierarchy_dit: 3   # Maximum Depth In Tree
+
+  # Cyclic Dependency
+  # Circular dependencies between modules/classes
+  cyclic_dependency_length: 2  # Maximum cycle length
+
+  # Feature Envy
+  # Methods that use more data from other classes than their own
+  feature_envy_threshold: 3  # Access threshold
+
+  # Dense Structure
+  # Overly interconnected components
+  dense_structure_degree: 0.5  # Connection density ratio (0.0-1.0)
+
+  # Weakened Modularity
+  # Loss of modular boundaries
+  weakened_modularity_ratio: 1.0  # Modularity degradation ratio
+
+module_smells:
+  # Duplicate Code Blocks
+  # Identical or very similar code segments
+  duplicate_block_tokens: 150  # Minimum token count for duplication
+
+  # Imperative Abstraction
+  # Code that mixes high-level logic with low-level implementation
+  imperative_abstraction_max_exec_count: 2      # Maximum executable statements
+  imperative_abstraction_exec_ratio: 0.20       # Executable vs total code ratio
+
+  # Insufficient Modularization
+  # Files that are too large or complex
+  insufficient_modularization_max_line_count: 40       # Maximum lines per file
+  insufficient_modularization_max_nesting_depth: 3     # Maximum nesting levels
+  insufficient_modularization_max_type_declarations: 1 # Maximum types per file
+
+  # Missing Abstraction
+  # Groups of related elements that should be abstracted
+  missing_abstraction_max_elements: 2  # Maximum elements without abstraction
+
+  # Unstructured Module
+  # Files that lack proper structure
+  unstructured_module_max_elements: 3  # Maximum unstructured elements

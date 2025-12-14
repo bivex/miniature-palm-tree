@@ -356,6 +356,33 @@ public struct Thresholds: Sendable {
         )
     )
 
+    // MARK: - Team/Company Profiles
+
+    /// Startup thresholds - lenient for fast-moving teams
+    public static func startup() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/startup/default.yml")
+    }
+
+    /// Enterprise thresholds - strict for large organizations
+    public static func enterprise() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/enterprise/default.yml")
+    }
+
+    /// Research thresholds - academic-level scrutiny
+    public static func research() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/research/default.yml")
+    }
+
+    /// Legacy thresholds - lenient for existing codebases
+    public static func legacy() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/legacy/default.yml")
+    }
+
+    /// Mobile thresholds - optimized for iOS/Swift development
+    public static func mobile() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/mobile/default.yml")
+    }
+
     public init(
         classSmells: ClassSmellThresholds = .init(),
         methodSmells: MethodSmellThresholds = .init(),

@@ -1,0 +1,38 @@
+class_smells:
+  god_class_wmc: 40
+  god_class_tcc: 0.4
+  god_class_atfd: 4
+  god_class_loc: 400
+  mfa_lcom: 0.65
+  mfa_wmc: 28
+  mfa_nof: 7
+  mfa_nom: 12
+  deficient_encapsulation_woa: 0.25
+  lazy_class_nom: 6
+  lazy_class_nof: 6
+  lazy_class_dit: 3
+  massive_vc_nom: 18
+  massive_vc_noa: 14
+
+method_smells:
+  long_method_loc: 45
+  long_method_cc: 8
+  long_method_noi: 25
+
+structural_smells:
+  message_chain_length: 3
+  broken_hierarchy_dit: 2
+  cyclic_dependency_length: 1
+  feature_envy_threshold: 2
+  dense_structure_degree: 0.4
+  weakened_modularity_ratio: 0.9
+
+module_smells:
+  duplicate_block_tokens: 120
+  imperative_abstraction_max_exec_count: 1
+  imperative_abstraction_exec_ratio: 0.18
+  insufficient_modularization_max_line_count: 35
+  insufficient_modularization_max_nesting_depth: 2
+  insufficient_modularization_max_type_declarations: 1
+  missing_abstraction_max_elements: 1
+  unstructured_module_max_elements: 2

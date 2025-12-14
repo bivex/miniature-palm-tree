@@ -298,6 +298,34 @@ let strictThresholds = Thresholds.strict
 // Aggressive detection for new projects
 ```
 
+#### Team-Specific Configurations
+
+The analyzer now includes specialized configurations for different team types and organizational contexts:
+
+```swift
+// Startup teams - lenient for fast development
+let startupThresholds = try Thresholds.startup()
+
+// Enterprise teams - strict compliance and maintainability
+let enterpriseThresholds = try Thresholds.enterprise()
+
+// Research teams - academic-level scrutiny
+let researchThresholds = try Thresholds.research()
+
+// Legacy codebases - very lenient for existing projects
+let legacyThresholds = try Thresholds.legacy()
+
+// Mobile development - iOS/Swift optimized
+let mobileThresholds = try Thresholds.mobile()
+```
+
+Each configuration is tailored to specific development contexts:
+- **Startup**: Prioritizes development velocity with more lenient thresholds
+- **Enterprise**: Emphasizes code quality and maintainability for large organizations
+- **Research**: Provides thorough analysis for academic and research environments
+- **Legacy**: Accommodates existing codebases that can't be immediately refactored
+- **Mobile**: Optimized for iOS/Swift development patterns and constraints
+
 #### Custom Configuration
 ```swift
 let customConfig = Thresholds(

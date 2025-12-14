@@ -73,9 +73,54 @@ structural_smells:
 ## Built-in Configurations
 
 The tool includes several built-in threshold configurations:
+
+### Legacy Configurations
 - **academic** (default): Academic thresholds from research literature
 - **lenient**: More permissive thresholds
 - **strict**: More aggressive defect detection
+
+### Team/Company Profiles
+
+The tool now includes specialized configurations for different types of teams and organizations:
+
+- **startup**: Lenient thresholds optimized for fast-moving startup teams that prioritize speed over strict quality metrics
+- **enterprise**: Strict thresholds designed for large organizations with complex codebases and compliance requirements
+- **research**: Academic-level scrutiny for research teams requiring thorough analysis
+- **legacy**: Very lenient thresholds for teams working with existing large codebases
+- **mobile**: Balanced thresholds optimized for iOS/Swift mobile development patterns
+
+These profiles are loaded from YAML files in `Config/teams/` and can be used programmatically:
+
+```swift
+// Load team-specific thresholds
+let thresholds = try Thresholds.startup()      // For startup teams
+let thresholds = try Thresholds.enterprise()   // For enterprise teams
+let thresholds = try Thresholds.research()     // For research teams
+let thresholds = try Thresholds.legacy()       // For legacy codebases
+let thresholds = try Thresholds.mobile()       // For mobile development
+```
+
+### Custom Team Configurations
+
+Teams can create their own configurations by:
+
+1. Copying `Config/teams/config_template.yml` to create a custom config
+2. Modifying thresholds based on team needs and codebase characteristics
+3. Loading the custom config using `--thresholds` flag or the API
+
+Example custom team configuration structure:
+```
+Config/teams/
+├── startup/
+│   └── default.yml          # Startup team defaults
+├── enterprise/
+│   └── default.yml          # Enterprise team defaults
+├── your_team/
+│   ├── default.yml          # Your team's custom config
+│   ├── ios_focused.yml      # iOS-specific variant
+│   └── backend_focused.yml  # Backend-specific variant
+└── config_template.yml      # Template for new teams
+```
 
 ## Exporting Current Thresholds
 
