@@ -303,6 +303,7 @@ private class MultifacetedStructAnalyzer {
             methods: methods,
             attributes: attributes,
             loc: { let structDescription = structDecl.description; return structDescription.components(separatedBy: "\n").count }()
+        )
 
         // Calculate metrics using Z notation calculators
         let lcom5 = LCOM_Calculator.calculateLCOM5(for: tempClass)
