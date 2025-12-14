@@ -383,6 +383,23 @@ public struct Thresholds: Sendable {
         try fromYAMLFile(at: "Config/teams/mobile/default.yml")
     }
 
+    // MARK: - Experience Level Profiles
+
+    /// Junior developer thresholds - lenient for learning and growth
+    public static func junior() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/junior/default.yml")
+    }
+
+    /// Middle developer thresholds - balanced for experienced developers
+    public static func middle() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/middle/default.yml")
+    }
+
+    /// Senior developer thresholds - strict for expert-level code quality
+    public static func senior() throws -> Thresholds {
+        try fromYAMLFile(at: "Config/teams/senior/default.yml")
+    }
+
     public init(
         classSmells: ClassSmellThresholds = .init(),
         methodSmells: MethodSmellThresholds = .init(),

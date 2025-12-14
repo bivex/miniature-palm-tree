@@ -326,6 +326,26 @@ Each configuration is tailored to specific development contexts:
 - **Legacy**: Accommodates existing codebases that can't be immediately refactored
 - **Mobile**: Optimized for iOS/Swift development patterns and constraints
 
+#### Developer Experience Level Configurations
+
+The analyzer also provides configurations tailored to different developer experience levels:
+
+```swift
+// Junior developers - supportive learning environment
+let juniorThresholds = try Thresholds.junior()
+
+// Middle developers - balanced professional standards
+let middleThresholds = try Thresholds.middle()
+
+// Senior developers - expert-level code quality standards
+let seniorThresholds = try Thresholds.senior()
+```
+
+**Experience Level Characteristics:**
+- **Junior**: More lenient thresholds to support learning and avoid overwhelming new developers
+- **Middle**: Balanced thresholds based on academic research, suitable for experienced developers
+- **Senior**: Strict thresholds for expert developers who can handle complex refactoring
+
 #### Custom Configuration
 ```swift
 let customConfig = Thresholds(

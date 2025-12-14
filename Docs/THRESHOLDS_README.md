@@ -89,6 +89,14 @@ The tool now includes specialized configurations for different types of teams an
 - **legacy**: Very lenient thresholds for teams working with existing large codebases
 - **mobile**: Balanced thresholds optimized for iOS/Swift mobile development patterns
 
+### Developer Experience Level Profiles
+
+The analyzer also provides configurations tailored to different developer experience levels:
+
+- **junior**: More lenient thresholds to support learning and avoid overwhelming new developers with too many issues
+- **middle**: Balanced thresholds based on academic research, suitable for experienced developers
+- **senior**: Strict thresholds for expert developers who can handle complex refactoring tasks and want early issue detection
+
 These profiles are loaded from YAML files in `Config/teams/` and can be used programmatically:
 
 ```swift
@@ -98,6 +106,11 @@ let thresholds = try Thresholds.enterprise()   // For enterprise teams
 let thresholds = try Thresholds.research()     // For research teams
 let thresholds = try Thresholds.legacy()       // For legacy codebases
 let thresholds = try Thresholds.mobile()       // For mobile development
+
+// Load experience level thresholds
+let thresholds = try Thresholds.junior()       // For junior developers
+let thresholds = try Thresholds.middle()       // For middle developers
+let thresholds = try Thresholds.senior()       // For senior developers
 ```
 
 ### Custom Team Configurations
@@ -115,6 +128,18 @@ Config/teams/
 │   └── default.yml          # Startup team defaults
 ├── enterprise/
 │   └── default.yml          # Enterprise team defaults
+├── research/
+│   └── default.yml          # Research team defaults
+├── legacy/
+│   └── default.yml          # Legacy codebase defaults
+├── mobile/
+│   └── default.yml          # Mobile development defaults
+├── junior/
+│   └── default.yml          # Junior developer defaults
+├── middle/
+│   └── default.yml          # Middle developer defaults
+├── senior/
+│   └── default.yml          # Senior developer defaults
 ├── your_team/
 │   ├── default.yml          # Your team's custom config
 │   ├── ios_focused.yml      # iOS-specific variant
