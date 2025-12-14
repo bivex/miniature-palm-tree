@@ -33,5 +33,6 @@ module_smells:
   imperative_abstraction_exec_ratio: 0.25
   insufficient_modularization_max_line_count: 60
   insufficient_modularization_max_nesting_depth: 4
+  insufficient_modularization_max_type_declarations: 2
   missing_abstraction_max_elements: 3
   unstructured_module_max_elements: 4

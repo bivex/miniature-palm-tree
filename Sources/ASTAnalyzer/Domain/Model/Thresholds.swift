@@ -166,6 +166,7 @@ public struct ModuleSmellThresholds: Sendable, Codable {
     public let imperativeAbstractionExecRatio: Double
     public let insufficientModularizationMaxLineCount: Int
     public let insufficientModularizationMaxNestingDepth: Int
+    public let insufficientModularizationMaxTypeDeclarations: Int
     public let missingAbstractionMaxElements: Int
     public let unstructuredModuleMaxElements: Int
 
@@ -175,6 +176,7 @@ public struct ModuleSmellThresholds: Sendable, Codable {
         case imperativeAbstractionExecRatio = "imperative_abstraction_exec_ratio"
         case insufficientModularizationMaxLineCount = "insufficient_modularization_max_line_count"
         case insufficientModularizationMaxNestingDepth = "insufficient_modularization_max_nesting_depth"
+        case insufficientModularizationMaxTypeDeclarations = "insufficient_modularization_max_type_declarations"
         case missingAbstractionMaxElements = "missing_abstraction_max_elements"
         case unstructuredModuleMaxElements = "unstructured_module_max_elements"
     }
@@ -185,6 +187,7 @@ public struct ModuleSmellThresholds: Sendable, Codable {
         imperativeAbstractionExecRatio: Double = 0.20,
         insufficientModularizationMaxLineCount: Int = 40,
         insufficientModularizationMaxNestingDepth: Int = 3,
+        insufficientModularizationMaxTypeDeclarations: Int = 1,
         missingAbstractionMaxElements: Int = 2,
         unstructuredModuleMaxElements: Int = 3
     ) {
@@ -193,6 +196,7 @@ public struct ModuleSmellThresholds: Sendable, Codable {
         self.imperativeAbstractionExecRatio = imperativeAbstractionExecRatio
         self.insufficientModularizationMaxLineCount = insufficientModularizationMaxLineCount
         self.insufficientModularizationMaxNestingDepth = insufficientModularizationMaxNestingDepth
+        self.insufficientModularizationMaxTypeDeclarations = insufficientModularizationMaxTypeDeclarations
         self.missingAbstractionMaxElements = missingAbstractionMaxElements
         self.unstructuredModuleMaxElements = unstructuredModuleMaxElements
     }
@@ -260,6 +264,7 @@ public struct Thresholds: Sendable {
             imperativeAbstractionExecRatio: 0.20,
             insufficientModularizationMaxLineCount: 40,
             insufficientModularizationMaxNestingDepth: 3,
+            insufficientModularizationMaxTypeDeclarations: 1,
             missingAbstractionMaxElements: 2,
             unstructuredModuleMaxElements: 3
         )
@@ -302,6 +307,7 @@ public struct Thresholds: Sendable {
             imperativeAbstractionExecRatio: 0.25,
             insufficientModularizationMaxLineCount: 60,
             insufficientModularizationMaxNestingDepth: 4,
+            insufficientModularizationMaxTypeDeclarations: 2,
             missingAbstractionMaxElements: 3,
             unstructuredModuleMaxElements: 4
         )
@@ -344,6 +350,7 @@ public struct Thresholds: Sendable {
             imperativeAbstractionExecRatio: 0.15,
             insufficientModularizationMaxLineCount: 30,
             insufficientModularizationMaxNestingDepth: 2,
+            insufficientModularizationMaxTypeDeclarations: 1,
             missingAbstractionMaxElements: 1,
             unstructuredModuleMaxElements: 2
         )

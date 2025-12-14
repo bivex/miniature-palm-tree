@@ -1,37 +1,38 @@
 class_smells:
-  god_class_wmc: 100
-  god_class_tcc: 0.1
-  god_class_atfd: 10
-  god_class_loc: 1000
-  mfa_lcom: 1.0
-  mfa_wmc: 50
-  mfa_nof: 15
-  mfa_nom: 25
-  deficient_encapsulation_woa: 0.5
-  lazy_class_nom: 0
-  lazy_class_nof: 0
-  lazy_class_dit: 0
-  massive_vc_nom: 25
-  massive_vc_noa: 20
+  god_class_wmc: 180
+  god_class_tcc: 0.015
+  god_class_atfd: 30
+  god_class_loc: 3000
+  mfa_lcom: 2.5
+  mfa_wmc: 120
+  mfa_nof: 45
+  mfa_nom: 80
+  deficient_encapsulation_woa: 0.85
+  lazy_class_nom: 2
+  lazy_class_nof: 2
+  lazy_class_dit: 2
+  massive_vc_nom: 60
+  massive_vc_noa: 60
 
 method_smells:
-  long_method_loc: 100
-  long_method_cc: 20
-  long_method_noi: 100
+  long_method_loc: 400
+  long_method_cc: 55
+  long_method_noi: 350
 
 structural_smells:
-  message_chain_length: 10
-  broken_hierarchy_dit: 10
-  cyclic_dependency_length: 5
-  feature_envy_threshold: 4
-  dense_structure_degree: 0.7
-  weakened_modularity_ratio: 1.2
+  message_chain_length: 40
+  broken_hierarchy_dit: 45
+  cyclic_dependency_length: 25
+  feature_envy_threshold: 15
+  dense_structure_degree: 0.95
+  weakened_modularity_ratio: 2.5
 
 module_smells:
-  duplicate_block_tokens: 200
-  imperative_abstraction_max_exec_count: 3
-  imperative_abstraction_exec_ratio: 0.25
-  insufficient_modularization_max_line_count: 60
-  insufficient_modularization_max_nesting_depth: 4
-  missing_abstraction_max_elements: 3
-  unstructured_module_max_elements: 4
+  duplicate_block_tokens: 700
+  imperative_abstraction_max_exec_count: 15
+  imperative_abstraction_exec_ratio: 0.48
+  insufficient_modularization_max_line_count: 500
+  insufficient_modularization_max_nesting_depth: 15
+  insufficient_modularization_max_type_declarations: 10
+  missing_abstraction_max_elements: 15
+  unstructured_module_max_elements: 18

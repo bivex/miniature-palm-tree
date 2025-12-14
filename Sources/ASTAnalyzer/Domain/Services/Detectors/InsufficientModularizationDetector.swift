@@ -25,13 +25,13 @@ public final class InsufficientModularizationDetector: BaseDefectDetector {
     public override func detectDefects(in sourceFile: SourceFileSyntax, filePath: String) -> [ArchitecturalDefect] {
         var defects: [ArchitecturalDefect] = []
 
-        // DIM condition 1: File contains > 1 class/struct/enum/actor/protocol
+        // DIM condition 1: File contains > maxTypeDeclarations class/struct/enum/actor/protocol
         let typeDeclarationCount = countTypeDeclarations(in: sourceFile)
-        if typeDeclarationCount > 1 {
+        if typeDeclarationCount > thresholds.moduleSmells.insufficientModularizationMaxTypeDeclarations {
             let defect = ArchitecturalDefect(
                 type: .insufficientModularization,
                 severity: .high,
-                message: "File contains \(typeDeclarationCount) type declarations - should contain at most 1",
+                message: "File contains \(typeDeclarationCount) type declarations - should contain at most \(thresholds.moduleSmells.insufficientModularizationMaxTypeDeclarations)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Split type declarations into separate files"
             )
