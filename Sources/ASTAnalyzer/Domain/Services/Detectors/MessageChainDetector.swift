@@ -32,6 +32,7 @@ public final class MessageChainDetector: BaseDefectDetector {
     public override func detectDefects(in sourceFile: SourceFileSyntax, filePath: String) -> [ArchitecturalDefect] {
         var defects: [ArchitecturalDefect] = []
 
+        let sourceText = sourceFile.description
         let visitor = MessageChainVisitor()
         visitor.walk(sourceFile)
 
@@ -42,12 +43,14 @@ public final class MessageChainDetector: BaseDefectDetector {
             if !chains.isEmpty {
                 let maxChainLength = chains.map { $0.length }.max() ?? 0
                 if maxChainLength >= thresholds.structuralSmells.messageChainLength {
+                    let lineNumber = calculateLineNumber(from: method.node.position, in: sourceText)
                     let defect = ArchitecturalDefect(
                         type: .messageChain,
                         severity: calculateSeverity(for: maxChainLength),
                         message: "Method '\(method.name)' contains message chain of length \(maxChainLength) (threshold: \(thresholds.structuralSmells.messageChainLength))",
                         location: createLocation(
                             filePath: filePath,
+                            lineNumber: lineNumber,
                             context: "\(method.className).\(method.name)"
                         ),
                         suggestion: "Consider breaking the message chain by introducing intermediate variables or using method extraction"
@@ -80,6 +83,12 @@ public final class MessageChainDetector: BaseDefectDetector {
         case 3: return .high
         default: return .critical
         }
+    }
+
+    /// Calculates line number from absolute position in source text
+    private func calculateLineNumber(from position: AbsolutePosition, in sourceText: String) -> Int {
+        let prefix = sourceText.prefix(position.utf8Offset)
+        return prefix.components(separatedBy: "\n").count
     }
 }
 

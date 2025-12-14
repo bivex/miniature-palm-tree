@@ -21,6 +21,17 @@ public final class MarkdownFormatter {
         return formatter.string(from: date)
     }
 
+    /// Formats a timestamp for display in reports (English locale)
+    /// - Parameter date: The date to format
+    /// - Returns: Formatted timestamp string
+    public func formatDisplayTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US")
+        formatter.dateStyle = .full
+        formatter.timeStyle = .full
+        return formatter.string(from: date)
+    }
+
     /// Sanitizes a filename for filesystem safety
     /// - Parameter filename: The filename to sanitize
     /// - Returns: Sanitized filename
