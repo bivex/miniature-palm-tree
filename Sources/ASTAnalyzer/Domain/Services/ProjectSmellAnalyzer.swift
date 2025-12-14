@@ -46,7 +46,13 @@ public final class ProjectSmellAnalyzer {
             BrokenHierarchyDetector(),
             CyclicDependencyDetector(thresholds: thresholds),
             DenseStructureDetector(),
-            WeakenedModularityDetector()
+            WeakenedModularityDetector(),
+            DuplicateBlockDetector(),
+            ImperativeAbstractionDetector(),
+            InsufficientModularizationDetector(),
+            MissingAbstractionDetector(),
+            UnnecessaryAbstractionDetector(),
+            UnstructuredModuleDetector()
         ]
     }
 
