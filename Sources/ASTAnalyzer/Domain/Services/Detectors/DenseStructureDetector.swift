@@ -36,7 +36,7 @@ public final class DenseStructureDetector: BaseDefectDetector {
             let defect = ArchitecturalDefect(
                 type: .denseStructure,
                 severity: .high,
-                message: "File has dense dependency structure (average degree: \(String(format: "%.2f"))) - exceeds threshold of \(denseAvgDegreeThreshold)",
+                message: "File has dense dependency structure (average degree: \(String(format: "%.2f", avgDegree))) - exceeds threshold of \(denseAvgDegreeThreshold)",
                 location: createLocation(filePath: filePath),
                 suggestion: "Reduce coupling by introducing interfaces, breaking circular dependencies, or using dependency injection"
             )
@@ -61,15 +61,25 @@ private struct DependencyAnalysis {
     }
 
     mutating func addDependency(from sourceType: String, to targetType: String) {
-        if types.contains(targetType) { // Only count internal dependencies
-            dependencies[sourceType, default: []].insert(targetType)
-        }
+        // Count all dependencies, but only if target type is a known type in our analysis
+        // We add all types first, then dependencies
+        dependencies[sourceType, default: []].insert(targetType)
     }
 
     func calculateAverageDegree() -> Double {
         guard !types.isEmpty else { return 0.0 }
 
-        let totalConnections = dependencies.values.reduce(0) { $0 + $1.count }
+        var totalConnections = 0
+        for (sourceType, deps) in dependencies {
+            if types.contains(sourceType) { // Only count connections from known types
+                for dep in deps {
+                    if types.contains(dep) { // Only count connections to known types
+                        totalConnections += 1
+                    }
+                }
+            }
+        }
+
         return Double(totalConnections) / Double(types.count)
     }
 }
@@ -94,6 +104,18 @@ private class DependencyAnalyzer: SyntaxVisitor {
             for inheritedType in inheritanceClause.inheritedTypes {
                 let inheritedTypeName = inheritedType.type.description.trimmingCharacters(in: .whitespaces)
                 analysis.addDependency(from: typeName, to: inheritedTypeName)
+            }
+        }
+
+        // Analyze member properties
+        for member in node.memberBlock.members {
+            if let varDecl = member.decl.as(VariableDeclSyntax.self) {
+                for binding in varDecl.bindings {
+                    if let typeAnnotation = binding.typeAnnotation {
+                        let dependencyTypeName = extractTypeName(from: typeAnnotation.type)
+                        analysis.addDependency(from: typeName, to: dependencyTypeName)
+                    }
+                }
             }
         }
 
@@ -143,15 +165,7 @@ private class DependencyAnalyzer: SyntaxVisitor {
     }
 
     override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-        if let currentType = currentTypeContext {
-            // Analyze property types
-            for binding in node.bindings {
-                if let typeAnnotation = binding.typeAnnotation {
-                    let typeName = extractTypeName(from: typeAnnotation.type)
-                    analysis.addDependency(from: currentType, to: typeName)
-                }
-            }
-        }
+        // Properties are now handled in ClassDeclSyntax visitor
         return .visitChildren
     }
 

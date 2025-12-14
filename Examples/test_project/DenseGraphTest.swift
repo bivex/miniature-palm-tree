@@ -1,0 +1,29 @@
+// DenseGraphTest.swift - Dense graph test for structure detectors
+import Foundation
+
+class A { var b: B; var c: C; var d: D; var e: E; init(b: B, c: C, d: D, e: E) { self.b = b; self.c = c; self.d = d; self.e = e } }
+class B { var a: A; var c: C; var d: D; var e: E; var f: F; init(a: A, c: C, d: D, e: E, f: F) { self.a = a; self.c = c; self.d = d; self.e = e; self.f = f } }
+class C { var a: A; var b: B; var d: D; var e: E; var f: F; var g: G; init(a: A, b: B, d: D, e: E, f: F, g: G) { self.a = a; self.b = b; self.d = d; self.e = e; self.f = f; self.g = g } }
+class D { var a: A; var b: B; var c: C; var e: E; var f: F; var g: G; var h: H; init(a: A, b: B, c: C, e: E, f: F, g: G, h: H) { self.a = a; self.b = b; self.c = c; self.e = e; self.f = f; self.g = g; self.h = h } }
+class E { var a: A; var b: B; var c: C; var d: D; var f: F; var g: G; var h: H; var i: I; init(a: A, b: B, c: C, d: D, f: F, g: G, h: H, i: I) { self.a = a; self.b = b; self.c = c; self.d = d; self.f = f; self.g = g; self.h = h; self.i = i } }
+class F { var b: B; var c: C; var d: D; var e: E; var g: G; var h: H; var i: I; var j: J; init(b: B, c: C, d: D, e: E, g: G, h: H, i: I, j: J) { self.b = b; self.c = c; self.d = d; self.e = e; self.g = g; self.h = h; self.i = i; self.j = j } }
+class G { var c: C; var d: D; var e: E; var f: F; var h: H; var i: I; var j: J; var k: K; init(c: C, d: D, e: E, f: F, h: H, i: I, j: J, k: K) { self.c = c; self.d = d; self.e = e; self.f = f; self.h = h; self.i = i; self.j = j; self.k = k } }
+class H { var d: D; var e: E; var f: F; var g: G; var i: I; var j: J; var k: K; var l: L; init(d: D, e: E, f: F, g: G, i: I, j: J, k: K, l: L) { self.d = d; self.e = e; self.f = f; self.g = g; self.i = i; self.j = j; self.k = k; self.l = l } }
+class I { var e: E; var f: F; var g: G; var h: H; var j: J; var k: K; var l: L; var m: M; init(e: E, f: F, g: G, h: H, j: J, k: K, l: L, m: M) { self.e = e; self.f = f; self.g = g; self.h = h; self.j = j; self.k = k; self.l = l; self.m = m } }
+class J { var f: F; var g: G; var h: H; var i: I; var k: K; var l: L; var m: M; var n: N; init(f: F, g: G, h: H, i: I, k: K, l: L, m: M, n: N) { self.f = f; self.g = g; self.h = h; self.i = i; self.k = k; self.l = l; self.m = m; self.n = n } }
+class K { var g: G; var h: H; var i: I; var j: J; var l: L; var m: M; var n: N; var o: O; init(g: G, h: H, i: I, j: J, l: L, m: M, n: N, o: O) { self.g = g; self.h = h; self.i = i; self.j = j; self.l = l; self.m = m; self.n = n; self.o = o } }
+class L { var h: H; var i: I; var j: J; var k: K; var m: M; var n: N; var o: O; var p: P; init(h: H, i: I, j: J, k: K, m: M, n: N, o: O, p: P) { self.h = h; self.i = i; self.j = j; self.k = k; self.m = m; self.n = n; self.o = o; self.p = p } }
+class M { var i: I; var j: J; var k: K; var l: L; var n: N; var o: O; var p: P; var q: Q; init(i: I, j: J, k: K, l: L, n: N, o: O, p: P, q: Q) { self.i = i; self.j = j; self.k = k; self.l = l; self.n = n; self.o = o; self.p = p; self.q = q } }
+class N { var j: J; var k: K; var l: L; var m: M; var o: O; var p: P; var q: Q; var r: R; init(j: J, k: K, l: L, m: M, o: O, p: P, q: Q, r: R) { self.j = j; self.k = k; self.l = l; self.m = m; self.o = o; self.p = p; self.q = q; self.r = r } }
+class O { var k: K; var l: L; var m: M; var n: N; var p: P; var q: Q; var r: R; var s: S; init(k: K, l: L, m: M, n: N, p: P, q: Q, r: R, s: S) { self.k = k; self.l = l; self.m = m; self.n = n; self.p = p; self.q = q; self.r = r; self.s = s } }
+class P { var l: L; var m: M; var n: N; var o: O; var q: Q; var r: R; var s: S; var t: T; init(l: L, m: M, n: N, o: O, q: Q, r: R, s: S, t: T) { self.l = l; self.m = m; self.n = n; self.o = o; self.q = q; self.r = r; self.s = s; self.t = t } }
+class Q { var m: M; var n: N; var o: O; var p: P; var r: R; var s: S; var t: T; var u: U; init(m: M, n: N, o: O, p: P, r: R, s: S, t: T, u: U) { self.m = m; self.n = n; self.o = o; self.p = p; self.r = r; self.s = s; self.t = t; self.u = u } }
+class R { var n: N; var o: O; var p: P; var q: Q; var s: S; var t: T; var u: U; var v: V; init(n: N, o: O, p: P, q: Q, s: S, t: T, u: U, v: V) { self.n = n; self.o = o; self.p = p; self.q = q; self.s = s; self.t = t; self.u = u; self.v = v } }
+class S { var o: O; var p: P; var q: Q; var r: R; var t: T; var u: U; var v: V; var w: W; init(o: O, p: P, q: Q, r: R, t: T, u: U, v: V, w: W) { self.o = o; self.p = p; self.q = q; self.r = r; self.t = t; self.u = u; self.v = v; self.w = w } }
+class T { var p: P; var q: Q; var r: R; var s: S; var u: U; var v: V; var w: W; var x: X; init(p: P, q: Q, r: R, s: S, u: U, v: V, w: W, x: X) { self.p = p; self.q = q; self.r = r; self.s = s; self.u = u; self.v = v; self.w = w; self.x = x } }
+class U { var q: Q; var r: R; var s: S; var t: T; var v: V; var w: W; var x: X; var y: Y; init(q: Q, r: R, s: S, t: T, v: V, w: W, x: X, y: Y) { self.q = q; self.r = r; self.s = s; self.t = t; self.v = v; self.w = w; self.x = x; self.y = y } }
+class V { var r: R; var s: S; var t: T; var u: U; var w: W; var x: X; var y: Y; var z: Z; init(r: R, s: S, t: T, u: U, w: W, x: X, y: Y, z: Z) { self.r = r; self.s = s; self.t = t; self.u = u; self.w = w; self.x = x; self.y = y; self.z = z } }
+class W { var s: S; var t: T; var u: U; var v: V; var x: X; var y: Y; var z: Z; init(s: S, t: T, u: U, v: V, x: X, y: Y, z: Z) { self.s = s; self.t = t; self.u = u; self.v = v; self.x = x; self.y = y; self.z = z } }
+class X { var t: T; var u: U; var v: V; var w: W; var y: Y; var z: Z; init(t: T, u: U, v: V, w: W, y: Y, z: Z) { self.t = t; self.u = u; self.v = v; self.w = w; self.y = y; self.z = z } }
+class Y { var u: U; var v: V; var w: W; var x: X; var z: Z; init(u: U, v: V, w: W, x: X, z: Z) { self.u = u; self.v = v; self.w = w; self.x = x; self.z = z } }
+class Z { var v: V; var w: W; var x: X; var y: Y; init(v: V, w: W, x: X, y: Y) { self.v = v; self.w = w; self.x = x; self.y = y } }

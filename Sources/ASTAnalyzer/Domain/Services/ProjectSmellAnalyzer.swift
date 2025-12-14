@@ -44,7 +44,9 @@ public final class ProjectSmellAnalyzer {
             MessageChainDetector(thresholds: thresholds),
             FeatureEnvyDetector(thresholds: thresholds),
             BrokenHierarchyDetector(),
-            CyclicDependencyDetector(thresholds: thresholds)
+            CyclicDependencyDetector(thresholds: thresholds),
+            DenseStructureDetector(),
+            WeakenedModularityDetector()
         ]
     }
 

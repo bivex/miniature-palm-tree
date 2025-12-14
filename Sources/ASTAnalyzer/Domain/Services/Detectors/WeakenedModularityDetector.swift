@@ -33,19 +33,27 @@ public final class WeakenedModularityDetector: BaseDefectDetector {
         let cohesion = calculateCohesion(analysis)
         let coupling = calculateCoupling(analysis)
 
+        print("DEBUG WeakenedModularityDetector: cohesion=\(cohesion), coupling=\(coupling)")
+
         if coupling > 0 { // Avoid division by zero
             let modularityRatio = cohesion / coupling
+            print("DEBUG WeakenedModularityDetector: modularityRatio=\(modularityRatio), threshold=\(modularityRatioThreshold)")
 
             if modularityRatio < modularityRatioThreshold {
+                print("DEBUG WeakenedModularityDetector: creating defect")
                 let defect = ArchitecturalDefect(
                     type: .weakenedModularity,
                     severity: .medium,
-                    message: "File has weakened modularity (cohesion/coupling ratio: \(String(format: "%.2f"))) - below threshold of \(modularityRatioThreshold)",
+                    message: "File has weakened modularity (cohesion/coupling ratio: \(String(format: "%.2f", modularityRatio))) - below threshold of \(modularityRatioThreshold)",
                     location: createLocation(filePath: filePath),
                     suggestion: "Improve cohesion by grouping related functionality or reduce coupling by introducing abstractions"
                 )
                 defects.append(defect)
+            } else {
+                print("DEBUG WeakenedModularityDetector: ratio above threshold")
             }
+        } else {
+            print("DEBUG WeakenedModularityDetector: coupling is 0, skipping")
         }
 
         return defects
