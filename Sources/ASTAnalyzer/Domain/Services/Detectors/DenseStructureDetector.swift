@@ -190,8 +190,6 @@ private class DependencyAnalyzer: SyntaxVisitor {
     private func extractTypeName(from type: TypeSyntax) -> String {
         // Simple type name extraction - this could be improved
         let typeDescription = type.description
-        let trimmedTypeDescription = typeDescription.trimmingCharacters(in: .whitespaces)
-
         // Remove generic parameters for simplicity
         if let bracketIndex = typeDescription.firstIndex(of: "<") {
             return String(typeDescription[..<bracketIndex])
@@ -204,6 +202,6 @@ private class DependencyAnalyzer: SyntaxVisitor {
             }
         }
 
-        return typeDescription
+        return typeDescription.trimmingCharacters(in: .whitespaces)
     }
 }

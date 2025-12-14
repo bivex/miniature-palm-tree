@@ -101,7 +101,7 @@ public final class SummaryMarkdownBuilder {
 
     private func buildAnalysisMetadataSection(_ report: SmellReport) -> String {
         let timestamp = report.metadata.timestamp
-        """
+        return """
 
 ## 📋 Analysis Metadata
 

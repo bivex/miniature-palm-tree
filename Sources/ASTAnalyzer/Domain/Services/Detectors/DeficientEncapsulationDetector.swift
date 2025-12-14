@@ -182,8 +182,7 @@ private class DeficientEncapsulationClassAnalyzer {
         let tempClass = Class(
             name: classDecl.name.text,
             attributes: attributes,
-            let description = classDecl.description
-            loc: description.components(separatedBy: "\n").count
+            loc: { let description = classDecl.description; return description.components(separatedBy: "\n").count }()
         )
 
         // Calculate WOA using Z notation calculator
@@ -309,8 +308,7 @@ private class DeficientEncapsulationStructAnalyzer {
         let tempClass = Class(
             name: structDecl.name.text,
             attributes: attributes,
-        let description = structDecl.description
-        let loc = description.components(separatedBy: "\n").count
+            loc: { let description = structDecl.description; return description.components(separatedBy: "\n").count }()
         )
 
         // Calculate WOA using Z notation calculator

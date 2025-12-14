@@ -228,8 +228,7 @@ private class MultifacetedClassAnalyzer {
             name: classDecl.name.text,
             methods: methods,
             attributes: attributes,
-            let classDescription = classDecl.description
-            loc: classDescription.components(separatedBy: "\n").count
+            loc: { let classDescription = classDecl.description; return classDescription.components(separatedBy: "\n").count }()
         )
 
         // Calculate metrics using Z notation calculators
@@ -303,8 +302,7 @@ private class MultifacetedStructAnalyzer {
             name: structDecl.name.text,
             methods: methods,
             attributes: attributes,
-            let structDescription = structDecl.description
-            loc: structDescription.components(separatedBy: "\n").count
+            loc: { let structDescription = structDecl.description; return structDescription.components(separatedBy: "\n").count }()
 
         // Calculate metrics using Z notation calculators
         let lcom5 = LCOM_Calculator.calculateLCOM5(for: tempClass)
