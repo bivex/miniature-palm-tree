@@ -130,6 +130,13 @@ public final class ArgumentParser {
         if thresholdsIndex + 1 < arguments.count && !arguments[thresholdsIndex + 1].hasPrefix("-") {
             let filePath = arguments[thresholdsIndex + 1]
             processedArgs.insert(filePath)
+
+            // Convert relative path to absolute path
+            if !filePath.hasPrefix("/") {
+                let currentDirectory = fileManager.currentDirectoryPath
+                return (currentDirectory as NSString).appendingPathComponent(filePath)
+            }
+
             return filePath
         }
 

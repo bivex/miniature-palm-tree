@@ -11,6 +11,8 @@ class_smells:
   lazy_class_nom: 10
   lazy_class_nof: 10
   lazy_class_dit: 5
+  massive_vc_nom: 15
+  massive_vc_noa: 12
 
 method_smells:
   long_method_loc: 20
